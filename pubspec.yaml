@@ -1,0 +1,93 @@
+name: gu_hr_mobile
+description: "GU HR Mobile — employee self-service app for iOS."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # State management
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+
+  # HTTP client
+  dio: ^5.7.0
+  dio_cache_interceptor: ^3.5.0
+
+  # Code generation
+  freezed_annotation: ^2.4.1
+  json_annotation: ^4.9.0
+
+  # Navigation
+  go_router: ^14.0.0
+
+  # Secure storage
+  flutter_secure_storage: ^9.2.2
+
+  # Local database
+  drift: ^2.18.0
+  sqlite3_flutter_libs: ^0.5.24
+  path_provider: ^2.1.4
+  path: ^1.9.0
+
+  # Device features
+  geolocator: ^12.0.0
+  camera: ^0.11.0
+
+  # Firebase
+  firebase_core: ^3.3.0
+  firebase_messaging: ^15.0.4
+  firebase_crashlytics: ^4.0.4
+  firebase_analytics: ^11.2.1
+
+  # Push notifications — local banners + settings + device info
+  flutter_local_notifications: ^17.2.2
+  shared_preferences: ^2.3.2
+  app_settings: ^5.1.1
+  device_info_plus: ^10.1.2
+  package_info_plus: ^8.0.2
+
+  # UI
+  google_fonts: ^6.2.1
+  connectivity_plus: ^6.0.3
+
+  # Image processing (resize + JPEG compress for selfie before base64 encoding)
+  image: ^4.2.0
+
+  # UUID generation for client-side idempotency keys in pending queue
+  uuid: ^4.5.0
+
+  # File sharing
+  share_plus: ^10.0.2
+
+  # Image picking from gallery/camera for request attachments
+  image_picker: ^1.1.2
+
+  # Vietnamese locale for date pickers + material localizations
+  flutter_localizations:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+
+  build_runner: ^2.4.11
+  riverpod_generator: ^2.4.3
+  freezed: ^2.5.7
+  json_serializable: ^6.8.0
+  drift_dev: ^2.18.0
+  flutter_lints: ^4.0.0
+  mocktail: ^1.0.4
+  http_mock_adapter: ^0.6.1
+
+flutter:
+  uses-material-design: true

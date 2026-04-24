@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  ExportOptions.plist.template
+  ============================
+  Copy this file → release/ExportOptions.plist and fill in YOUR values.
+  DO NOT commit ExportOptions.plist with real Team ID to source control
+  if you have multiple projects sharing this repo.
+
+  For CI/CD: generate this file from secrets (sed replacement or Fastlane match).
+-->
+<plist version="1.0">
+<dict>
+    <!-- Distribution method: app-store | ad-hoc | enterprise | development -->
+    <key>method</key>
+    <string>app-store</string>
+
+    <!-- Your Apple Developer Team ID (10 alphanumeric chars).
+         Find at: https://developer.apple.com/account → Membership Details -->
+    <key>teamID</key>
+    <string>YOUR_TEAM_ID_HERE</string>
+
+    <!-- Upload symbols to Apple for crash symbolication.
+         Set false if uploading dSYMs to Firebase Crashlytics manually. -->
+    <key>uploadSymbols</key>
+    <true/>
+
+    <!-- Upload bitcode — required for App Store, optional for ad-hoc. -->
+    <key>uploadBitcode</key>
+    <false/>
+
+    <!-- Compile bitcode — must match Xcode build setting. -->
+    <key>compileBitcode</key>
+    <false/>
+
+    <!-- Signing style: automatic | manual -->
+    <key>signingStyle</key>
+    <string>automatic</string>
+
+    <!-- For manual signing, uncomment and fill:
+    <key>signingCertificate</key>
+    <string>Apple Distribution: GU Online JSC (YOURTEAMID)</string>
+
+    <key>provisioningProfiles</key>
+    <dict>
+        <key>app.guop.guHrMobile</key>
+        <string>GU HR Mobile AppStore Profile</string>
+    </dict>
+    -->
+
+    <!-- Strip Swift symbols — reduces binary size. -->
+    <key>stripSwiftSymbols</key>
+    <true/>
+
+    <!-- Destination: export | upload
+         Use "upload" to push directly to App Store Connect after archive. -->
+    <key>destination</key>
+    <string>export</string>
+</dict>
+</plist>

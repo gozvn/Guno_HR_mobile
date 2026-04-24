@@ -1,0 +1,100 @@
+name: flutter-ci
+
+on:
+  pull_request:
+    branches: [main, dev]
+  push:
+    branches: [main, dev]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze-test:
+    name: Analyze + Test
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.7'
+          channel: stable
+          cache: true
+
+      - name: Cache pub dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            ${{ env.PUB_CACHE }}
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: ${{ runner.os }}-pub-
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run build_runner
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Flutter analyze
+        run: flutter analyze --no-pub
+
+      - name: Flutter test (with coverage)
+        run: flutter test --no-pub --coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: coverage/lcov.info
+          flags: unit
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  # ---------------------------------------------------------------------------
+  # IPA build job — runs on demand (workflow_dispatch) or on tags.
+  # Requires Apple Developer secrets configured in GitHub repo settings.
+  # Uncomment when Xcode signing is configured.
+  #
+  # build-ipa:
+  #   name: Build IPA (staging)
+  #   runs-on: macos-14
+  #   needs: analyze-test
+  #   if: startsWith(github.ref, 'refs/tags/v')
+  #
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: subosito/flutter-action@v2
+  #       with:
+  #         flutter-version: '3.41.7'
+  #         channel: stable
+  #
+  #     - name: Import certificates
+  #       uses: apple-actions/import-codesign-certs@v2
+  #       with:
+  #         p12-file-base64: ${{ secrets.CERTIFICATES_P12 }}
+  #         p12-password: ${{ secrets.CERTIFICATES_P12_PASSWORD }}
+  #
+  #     - name: Install provisioning profile
+  #       uses: apple-actions/download-provisioning-profiles@v1
+  #       with:
+  #         bundle-id: app.guop.guHrMobile
+  #         issuer-id: ${{ secrets.APP_STORE_API_ISSUER_ID }}
+  #         api-key-id: ${{ secrets.APP_STORE_API_KEY_ID }}
+  #         api-private-key: ${{ secrets.APP_STORE_API_PRIVATE_KEY }}
+  #
+  #     - name: Build IPA
+  #       run: ./release/scripts/build_ipa.sh staging
+  #
+  #     - name: Upload IPA artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: ipa-staging
+  #         path: build/ios/ipa/*.ipa
+  #         retention-days: 7
