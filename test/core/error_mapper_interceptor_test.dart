@@ -61,37 +61,37 @@ AppFailure _map(DioException err) {
 // Matchers using freezed .when() since private types aren't accessible.
 
 bool _isNetwork(AppFailure f) =>
-    f.when(network: (_) => true, unauthorized: () => false,
+    f.when(network: (_) => true, unauthorized: (_) => false,
         forbidden: (_) => false, server: (_, __) => false,
         validation: (_) => false, unknown: (_) => false);
 
 bool _isUnauthorized(AppFailure f) =>
-    f.when(network: (_) => false, unauthorized: () => true,
+    f.when(network: (_) => false, unauthorized: (_) => true,
         forbidden: (_) => false, server: (_, __) => false,
         validation: (_) => false, unknown: (_) => false);
 
 bool _isForbidden(AppFailure f) =>
-    f.when(network: (_) => false, unauthorized: () => false,
+    f.when(network: (_) => false, unauthorized: (_) => false,
         forbidden: (_) => true, server: (_, __) => false,
         validation: (_) => false, unknown: (_) => false);
 
 bool _isValidation(AppFailure f) =>
-    f.when(network: (_) => false, unauthorized: () => false,
+    f.when(network: (_) => false, unauthorized: (_) => false,
         forbidden: (_) => false, server: (_, __) => false,
         validation: (_) => true, unknown: (_) => false);
 
 bool _isServer(AppFailure f) =>
-    f.when(network: (_) => false, unauthorized: () => false,
+    f.when(network: (_) => false, unauthorized: (_) => false,
         forbidden: (_) => false, server: (_, __) => true,
         validation: (_) => false, unknown: (_) => false);
 
 int _serverCode(AppFailure f) =>
-    f.when(network: (_) => -1, unauthorized: () => -1,
+    f.when(network: (_) => -1, unauthorized: (_) => -1,
         forbidden: (_) => -1, server: (code, _) => code,
         validation: (_) => -1, unknown: (_) => -1);
 
 String _validationMsg(AppFailure f) =>
-    f.when(network: (_) => '', unauthorized: () => '',
+    f.when(network: (_) => '', unauthorized: (_) => '',
         forbidden: (_) => '', server: (_, __) => '',
         validation: (msg) => msg, unknown: (_) => '');
 

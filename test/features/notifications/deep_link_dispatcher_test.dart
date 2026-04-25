@@ -39,26 +39,26 @@ void main() {
       expect(capturedPath(), '/home');
     });
 
-    test('newPendingApproval with focusId → /manager/approvals?focus=7', () {
+    test('newPendingApproval with focusId → /reports/approvals?focus=7', () {
       dispatcher.handle(PushPayload.fromData({
         'type': 'new_pending_approval',
         'request_id': '7',
       }));
-      expect(capturedPath(), '/manager/approvals?focus=7');
+      expect(capturedPath(), '/reports/approvals?focus=7');
     });
 
-    test('newPendingApproval without focusId → /manager/approvals', () {
+    test('newPendingApproval without focusId → /reports/approvals', () {
       dispatcher.handle(PushPayload.fromData({
         'type': 'new_pending_approval',
       }));
-      expect(capturedPath(), '/manager/approvals');
+      expect(capturedPath(), '/reports/approvals');
     });
 
-    test('leaveBalanceUpdated → /home/leave', () {
+    test('leaveBalanceUpdated → /leave', () {
       dispatcher.handle(PushPayload.fromData({
         'type': 'leave_balance_updated',
       }));
-      expect(capturedPath(), '/home/leave');
+      expect(capturedPath(), '/leave');
     });
 
     test('checkInReminder → /attendance/check-in', () {
@@ -68,11 +68,11 @@ void main() {
       expect(capturedPath(), '/attendance/check-in');
     });
 
-    test('teamCheckinAlert → /manager', () {
+    test('teamCheckinAlert → /reports', () {
       dispatcher.handle(PushPayload.fromData({
         'type': 'team_checkin_alert',
       }));
-      expect(capturedPath(), '/manager');
+      expect(capturedPath(), '/reports');
     });
 
     test('unknown type → /home (no crash)', () {

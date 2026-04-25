@@ -117,6 +117,9 @@ void main() {
       await tester.enterText(fields.at(1), 'secret123');
 
       await tester.tap(find.widgetWithText(FilledButton, 'Đăng nhập'));
+      // Drain the pre-nav success-banner delay (1200ms) plus a margin.
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 2));
       await tester.pumpAndSettle();
 
       verify(() => repo.login('test@guop.app', 'secret123')).called(1);
