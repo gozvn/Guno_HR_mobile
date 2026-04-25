@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/dto/monthly_attendance_dto.dart';
+import 'calendar_stats_banner.dart';
 import 'day_detail_sheet.dart';
 
 /// Internal calendar grid + legend used by MonthlyCalendarPage.
@@ -19,7 +20,7 @@ class CalendarGridWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dayMap = {for (final d in data.days) d.date: d};
+    final dayMap = {for (final d in data.rows) d.date: d};
     final firstDay = DateTime(year, month, 1);
     final startOffset = (firstDay.weekday - 1) % 7;
     final daysInMonth = DateUtils.getDaysInMonth(year, month);
@@ -29,6 +30,7 @@ class CalendarGridWidget extends StatelessWidget {
 
     return Column(
       children: [
+        CalendarStatsBanner(summary: data.summary, rows: data.rows),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           child: Row(
@@ -94,17 +96,21 @@ class _DayCell extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = attendanceStatusColor(record?.status);
     final isToday = DateTime.now().day == day;
+    final hasRecord = record != null;
+    // Attended days are emphasised with a stronger fill so the calendar reads
+    // at a glance; empty/weekend cells stay light.
+    final fillAlpha = hasRecord ? 0.30 : 0.0;
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.15),
+          color: color.withValues(alpha: fillAlpha),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isToday
                 ? Theme.of(context).colorScheme.primary
-                : color.withValues(alpha: 0.3),
+                : color.withValues(alpha: hasRecord ? 0.6 : 0.2),
             width: isToday ? 2 : 1,
           ),
         ),
@@ -113,15 +119,17 @@ class _DayCell extends StatelessWidget {
           children: [
             Text(
               '$day',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontWeight:
-                        isToday ? FontWeight.bold : FontWeight.normal,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: hasRecord || isToday
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                   ),
             ),
             if (record != null)
               Container(
                 width: 6,
                 height: 6,
+                margin: const EdgeInsets.only(top: 2),
                 decoration: BoxDecoration(
                     shape: BoxShape.circle, color: color),
               ),

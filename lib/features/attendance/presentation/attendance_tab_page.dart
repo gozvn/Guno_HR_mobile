@@ -38,15 +38,8 @@ class AttendanceTabPage extends ConsumerWidget {
 
             // This-week mini strip.
             const _WeekStrip(),
-            const SizedBox(height: 16),
-
-            // Link to monthly view.
-            OutlinedButton.icon(
-              onPressed: () =>
-                  context.pushNamed(Routes.attendanceMonthly),
-              icon: const Icon(Icons.calendar_month_outlined),
-              label: const Text('Xem bảng công tháng'),
-            ),
+            // Bảng công tháng moved to the Báo cáo tab — accessible there
+            // for both employees ("Bảng công của tôi") and managers.
           ],
         ),
       ),

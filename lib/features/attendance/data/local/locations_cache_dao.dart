@@ -23,8 +23,10 @@ class LocationsCacheDao extends DatabaseAccessor<AttendanceDatabase>
     final oldest = rows
         .map((r) => r.cachedAt)
         .reduce((a, b) => a.isBefore(b) ? a : b);
+    // 1-hour TTL so admin can add/move office locations without users having
+    // to log out. Trade-off: 1 extra GET /locations per hour per device.
     final stale =
-        DateTime.now().difference(oldest) > const Duration(hours: 24);
+        DateTime.now().difference(oldest) > const Duration(hours: 1);
     return stale ? null : rows;
   }
 

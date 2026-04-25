@@ -22,11 +22,12 @@ class AttendanceApi {
         .toList();
   }
 
-  /// GET /api/hr/attendance/monthly?year=YYYY&month=MM
-  Future<MonthlyAttendanceDto> fetchMonthly(int year, int month) async {
+  /// GET /api/hr/attendance/monthly?employee_id=me&month=YYYY-MM
+  /// `employee_id=me` resolves to the authenticated user server-side.
+  Future<MonthlyAttendanceDto> fetchMonthly({required String month}) async {
     final resp = await _dio.get<Map<String, dynamic>>(
       '/api/hr/attendance/monthly',
-      queryParameters: {'year': year, 'month': month},
+      queryParameters: {'employee_id': 'me', 'month': month},
     );
     return MonthlyAttendanceDto.fromJson(resp.data!);
   }

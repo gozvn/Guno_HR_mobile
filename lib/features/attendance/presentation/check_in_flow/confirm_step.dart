@@ -150,7 +150,7 @@ class ConfirmStep extends ConsumerWidget {
         // Surface server message verbatim — e.g. "Không có đơn WFH được duyệt".
         notifier.setError(failure.when(
           network: (m) => m,
-          unauthorized: () => 'Phiên đã hết hạn, đăng nhập lại',
+          unauthorized: (_) => 'Phiên đã hết hạn, đăng nhập lại',
           forbidden: (msg) => msg ?? 'Không có quyền thực hiện',
           validation: (m) => m,
           server: (_, m) => m ?? 'Lỗi máy chủ',

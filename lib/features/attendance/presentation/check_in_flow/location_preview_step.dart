@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../../attendance_providers.dart';
+import '../../data/dto/location_dto.dart';
 import '../../domain/location_check.dart';
 import '../../services/location_check_resolver.dart';
 import '../widgets/gps_distance_indicator.dart';
+import 'office_location_map.dart';
 
 /// Step 1 — fetches GPS position + nearest office, shows distance pill.
 class LocationPreviewStep extends ConsumerStatefulWidget {
@@ -29,6 +31,7 @@ class _State extends ConsumerState<LocationPreviewStep> {
   String? _error;
   Position? _position;
   LocationCheck _check = const LocationCheck.unknown();
+  LocationDto? _nearestOffice;
   bool _lowAccuracy = false;
 
   @override
@@ -63,9 +66,27 @@ class _State extends ConsumerState<LocationPreviewStep> {
       // resolveLocationCheck is a pure function extracted to location_check_resolver.dart
       final check = resolveLocationCheck(geo, pos, locations);
 
+      // Pick the same office the resolver chose (by code) so the map and
+      // the distance pill agree on which radius to draw.
+      LocationDto? nearest;
+      final code = switch (check) {
+        LocationInRadius(:final locationCode) => locationCode,
+        LocationOutsideRadius(:final locationCode) => locationCode,
+        _ => null,
+      };
+      if (code != null) {
+        for (final loc in locations) {
+          if (loc.code == code) {
+            nearest = loc;
+            break;
+          }
+        }
+      }
+
       if (!mounted) return;
       setState(() {
         _check = check;
+        _nearestOffice = nearest;
         _loading = false;
       });
 
@@ -126,7 +147,14 @@ class _State extends ConsumerState<LocationPreviewStep> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.location_on, size: 56),
+          if (_position != null)
+            OfficeLocationMap(
+              userLat: _position!.latitude,
+              userLng: _position!.longitude,
+              office: _nearestOffice,
+            )
+          else
+            const Icon(Icons.location_on, size: 56),
           const SizedBox(height: 16),
           if (_lowAccuracy)
             Card(
@@ -154,8 +182,6 @@ class _State extends ConsumerState<LocationPreviewStep> {
           if (isOutside) ...[
             FilledButton(
               onPressed: widget.onWfh,
-              style: FilledButton.styleFrom(
-                  backgroundColor: Colors.orange.shade700),
               child: const Text('Làm việc từ xa (WFH)'),
             ),
             const SizedBox(height: 12),

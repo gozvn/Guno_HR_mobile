@@ -21,9 +21,8 @@ MonthlyAttendanceDto _$MonthlyAttendanceDtoFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$MonthlyAttendanceDto {
-  int get year => throw _privateConstructorUsedError;
-  int get month => throw _privateConstructorUsedError;
-  List<MonthlyDayDto> get days => throw _privateConstructorUsedError;
+  List<MonthlyDayDto> get rows => throw _privateConstructorUsedError;
+  MonthlySummaryDto? get summary => throw _privateConstructorUsedError;
 
   /// Serializes this MonthlyAttendanceDto to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -42,7 +41,9 @@ abstract class $MonthlyAttendanceDtoCopyWith<$Res> {
     $Res Function(MonthlyAttendanceDto) then,
   ) = _$MonthlyAttendanceDtoCopyWithImpl<$Res, MonthlyAttendanceDto>;
   @useResult
-  $Res call({int year, int month, List<MonthlyDayDto> days});
+  $Res call({List<MonthlyDayDto> rows, MonthlySummaryDto? summary});
+
+  $MonthlySummaryDtoCopyWith<$Res>? get summary;
 }
 
 /// @nodoc
@@ -62,24 +63,34 @@ class _$MonthlyAttendanceDtoCopyWithImpl<
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? year = null, Object? month = null, Object? days = null}) {
+  $Res call({Object? rows = null, Object? summary = freezed}) {
     return _then(
       _value.copyWith(
-            year: null == year
-                ? _value.year
-                : year // ignore: cast_nullable_to_non_nullable
-                      as int,
-            month: null == month
-                ? _value.month
-                : month // ignore: cast_nullable_to_non_nullable
-                      as int,
-            days: null == days
-                ? _value.days
-                : days // ignore: cast_nullable_to_non_nullable
+            rows: null == rows
+                ? _value.rows
+                : rows // ignore: cast_nullable_to_non_nullable
                       as List<MonthlyDayDto>,
+            summary: freezed == summary
+                ? _value.summary
+                : summary // ignore: cast_nullable_to_non_nullable
+                      as MonthlySummaryDto?,
           )
           as $Val,
     );
+  }
+
+  /// Create a copy of MonthlyAttendanceDto
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $MonthlySummaryDtoCopyWith<$Res>? get summary {
+    if (_value.summary == null) {
+      return null;
+    }
+
+    return $MonthlySummaryDtoCopyWith<$Res>(_value.summary!, (value) {
+      return _then(_value.copyWith(summary: value) as $Val);
+    });
   }
 }
 
@@ -92,7 +103,10 @@ abstract class _$$MonthlyAttendanceDtoImplCopyWith<$Res>
   ) = __$$MonthlyAttendanceDtoImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({int year, int month, List<MonthlyDayDto> days});
+  $Res call({List<MonthlyDayDto> rows, MonthlySummaryDto? summary});
+
+  @override
+  $MonthlySummaryDtoCopyWith<$Res>? get summary;
 }
 
 /// @nodoc
@@ -108,21 +122,17 @@ class __$$MonthlyAttendanceDtoImplCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? year = null, Object? month = null, Object? days = null}) {
+  $Res call({Object? rows = null, Object? summary = freezed}) {
     return _then(
       _$MonthlyAttendanceDtoImpl(
-        year: null == year
-            ? _value.year
-            : year // ignore: cast_nullable_to_non_nullable
-                  as int,
-        month: null == month
-            ? _value.month
-            : month // ignore: cast_nullable_to_non_nullable
-                  as int,
-        days: null == days
-            ? _value._days
-            : days // ignore: cast_nullable_to_non_nullable
+        rows: null == rows
+            ? _value._rows
+            : rows // ignore: cast_nullable_to_non_nullable
                   as List<MonthlyDayDto>,
+        summary: freezed == summary
+            ? _value.summary
+            : summary // ignore: cast_nullable_to_non_nullable
+                  as MonthlySummaryDto?,
       ),
     );
   }
@@ -132,30 +142,28 @@ class __$$MonthlyAttendanceDtoImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$MonthlyAttendanceDtoImpl implements _MonthlyAttendanceDto {
   const _$MonthlyAttendanceDtoImpl({
-    required this.year,
-    required this.month,
-    final List<MonthlyDayDto> days = const [],
-  }) : _days = days;
+    final List<MonthlyDayDto> rows = const [],
+    this.summary,
+  }) : _rows = rows;
 
   factory _$MonthlyAttendanceDtoImpl.fromJson(Map<String, dynamic> json) =>
       _$$MonthlyAttendanceDtoImplFromJson(json);
 
-  @override
-  final int year;
-  @override
-  final int month;
-  final List<MonthlyDayDto> _days;
+  final List<MonthlyDayDto> _rows;
   @override
   @JsonKey()
-  List<MonthlyDayDto> get days {
-    if (_days is EqualUnmodifiableListView) return _days;
+  List<MonthlyDayDto> get rows {
+    if (_rows is EqualUnmodifiableListView) return _rows;
     // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_days);
+    return EqualUnmodifiableListView(_rows);
   }
 
   @override
+  final MonthlySummaryDto? summary;
+
+  @override
   String toString() {
-    return 'MonthlyAttendanceDto(year: $year, month: $month, days: $days)';
+    return 'MonthlyAttendanceDto(rows: $rows, summary: $summary)';
   }
 
   @override
@@ -163,18 +171,16 @@ class _$MonthlyAttendanceDtoImpl implements _MonthlyAttendanceDto {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$MonthlyAttendanceDtoImpl &&
-            (identical(other.year, year) || other.year == year) &&
-            (identical(other.month, month) || other.month == month) &&
-            const DeepCollectionEquality().equals(other._days, _days));
+            const DeepCollectionEquality().equals(other._rows, _rows) &&
+            (identical(other.summary, summary) || other.summary == summary));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
     runtimeType,
-    year,
-    month,
-    const DeepCollectionEquality().hash(_days),
+    const DeepCollectionEquality().hash(_rows),
+    summary,
   );
 
   /// Create a copy of MonthlyAttendanceDto
@@ -197,20 +203,17 @@ class _$MonthlyAttendanceDtoImpl implements _MonthlyAttendanceDto {
 
 abstract class _MonthlyAttendanceDto implements MonthlyAttendanceDto {
   const factory _MonthlyAttendanceDto({
-    required final int year,
-    required final int month,
-    final List<MonthlyDayDto> days,
+    final List<MonthlyDayDto> rows,
+    final MonthlySummaryDto? summary,
   }) = _$MonthlyAttendanceDtoImpl;
 
   factory _MonthlyAttendanceDto.fromJson(Map<String, dynamic> json) =
       _$MonthlyAttendanceDtoImpl.fromJson;
 
   @override
-  int get year;
+  List<MonthlyDayDto> get rows;
   @override
-  int get month;
-  @override
-  List<MonthlyDayDto> get days;
+  MonthlySummaryDto? get summary;
 
   /// Create a copy of MonthlyAttendanceDto
   /// with the given fields replaced by the non-null parameter values.
@@ -232,10 +235,12 @@ mixin _$MonthlyDayDto {
   String? get checkIn => throw _privateConstructorUsedError;
   @JsonKey(name: 'check_out')
   String? get checkOut => throw _privateConstructorUsedError;
-  @JsonKey(name: 'working_hours')
-  double get workingHours => throw _privateConstructorUsedError;
   @JsonKey(name: 'late_minutes')
   int get lateMinutes => throw _privateConstructorUsedError;
+  @JsonKey(name: 'work_minutes')
+  int get workMinutes => throw _privateConstructorUsedError;
+  @JsonKey(name: 'ot_minutes')
+  int get otMinutes => throw _privateConstructorUsedError;
 
   /// Serializes this MonthlyDayDto to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -259,8 +264,9 @@ abstract class $MonthlyDayDtoCopyWith<$Res> {
     String status,
     @JsonKey(name: 'check_in') String? checkIn,
     @JsonKey(name: 'check_out') String? checkOut,
-    @JsonKey(name: 'working_hours') double workingHours,
     @JsonKey(name: 'late_minutes') int lateMinutes,
+    @JsonKey(name: 'work_minutes') int workMinutes,
+    @JsonKey(name: 'ot_minutes') int otMinutes,
   });
 }
 
@@ -283,8 +289,9 @@ class _$MonthlyDayDtoCopyWithImpl<$Res, $Val extends MonthlyDayDto>
     Object? status = null,
     Object? checkIn = freezed,
     Object? checkOut = freezed,
-    Object? workingHours = null,
     Object? lateMinutes = null,
+    Object? workMinutes = null,
+    Object? otMinutes = null,
   }) {
     return _then(
       _value.copyWith(
@@ -304,13 +311,17 @@ class _$MonthlyDayDtoCopyWithImpl<$Res, $Val extends MonthlyDayDto>
                 ? _value.checkOut
                 : checkOut // ignore: cast_nullable_to_non_nullable
                       as String?,
-            workingHours: null == workingHours
-                ? _value.workingHours
-                : workingHours // ignore: cast_nullable_to_non_nullable
-                      as double,
             lateMinutes: null == lateMinutes
                 ? _value.lateMinutes
                 : lateMinutes // ignore: cast_nullable_to_non_nullable
+                      as int,
+            workMinutes: null == workMinutes
+                ? _value.workMinutes
+                : workMinutes // ignore: cast_nullable_to_non_nullable
+                      as int,
+            otMinutes: null == otMinutes
+                ? _value.otMinutes
+                : otMinutes // ignore: cast_nullable_to_non_nullable
                       as int,
           )
           as $Val,
@@ -332,8 +343,9 @@ abstract class _$$MonthlyDayDtoImplCopyWith<$Res>
     String status,
     @JsonKey(name: 'check_in') String? checkIn,
     @JsonKey(name: 'check_out') String? checkOut,
-    @JsonKey(name: 'working_hours') double workingHours,
     @JsonKey(name: 'late_minutes') int lateMinutes,
+    @JsonKey(name: 'work_minutes') int workMinutes,
+    @JsonKey(name: 'ot_minutes') int otMinutes,
   });
 }
 
@@ -355,8 +367,9 @@ class __$$MonthlyDayDtoImplCopyWithImpl<$Res>
     Object? status = null,
     Object? checkIn = freezed,
     Object? checkOut = freezed,
-    Object? workingHours = null,
     Object? lateMinutes = null,
+    Object? workMinutes = null,
+    Object? otMinutes = null,
   }) {
     return _then(
       _$MonthlyDayDtoImpl(
@@ -376,13 +389,17 @@ class __$$MonthlyDayDtoImplCopyWithImpl<$Res>
             ? _value.checkOut
             : checkOut // ignore: cast_nullable_to_non_nullable
                   as String?,
-        workingHours: null == workingHours
-            ? _value.workingHours
-            : workingHours // ignore: cast_nullable_to_non_nullable
-                  as double,
         lateMinutes: null == lateMinutes
             ? _value.lateMinutes
             : lateMinutes // ignore: cast_nullable_to_non_nullable
+                  as int,
+        workMinutes: null == workMinutes
+            ? _value.workMinutes
+            : workMinutes // ignore: cast_nullable_to_non_nullable
+                  as int,
+        otMinutes: null == otMinutes
+            ? _value.otMinutes
+            : otMinutes // ignore: cast_nullable_to_non_nullable
                   as int,
       ),
     );
@@ -397,8 +414,9 @@ class _$MonthlyDayDtoImpl implements _MonthlyDayDto {
     required this.status,
     @JsonKey(name: 'check_in') this.checkIn,
     @JsonKey(name: 'check_out') this.checkOut,
-    @JsonKey(name: 'working_hours') this.workingHours = 0,
     @JsonKey(name: 'late_minutes') this.lateMinutes = 0,
+    @JsonKey(name: 'work_minutes') this.workMinutes = 0,
+    @JsonKey(name: 'ot_minutes') this.otMinutes = 0,
   });
 
   factory _$MonthlyDayDtoImpl.fromJson(Map<String, dynamic> json) =>
@@ -415,15 +433,18 @@ class _$MonthlyDayDtoImpl implements _MonthlyDayDto {
   @JsonKey(name: 'check_out')
   final String? checkOut;
   @override
-  @JsonKey(name: 'working_hours')
-  final double workingHours;
-  @override
   @JsonKey(name: 'late_minutes')
   final int lateMinutes;
+  @override
+  @JsonKey(name: 'work_minutes')
+  final int workMinutes;
+  @override
+  @JsonKey(name: 'ot_minutes')
+  final int otMinutes;
 
   @override
   String toString() {
-    return 'MonthlyDayDto(date: $date, status: $status, checkIn: $checkIn, checkOut: $checkOut, workingHours: $workingHours, lateMinutes: $lateMinutes)';
+    return 'MonthlyDayDto(date: $date, status: $status, checkIn: $checkIn, checkOut: $checkOut, lateMinutes: $lateMinutes, workMinutes: $workMinutes, otMinutes: $otMinutes)';
   }
 
   @override
@@ -436,10 +457,12 @@ class _$MonthlyDayDtoImpl implements _MonthlyDayDto {
             (identical(other.checkIn, checkIn) || other.checkIn == checkIn) &&
             (identical(other.checkOut, checkOut) ||
                 other.checkOut == checkOut) &&
-            (identical(other.workingHours, workingHours) ||
-                other.workingHours == workingHours) &&
             (identical(other.lateMinutes, lateMinutes) ||
-                other.lateMinutes == lateMinutes));
+                other.lateMinutes == lateMinutes) &&
+            (identical(other.workMinutes, workMinutes) ||
+                other.workMinutes == workMinutes) &&
+            (identical(other.otMinutes, otMinutes) ||
+                other.otMinutes == otMinutes));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -450,8 +473,9 @@ class _$MonthlyDayDtoImpl implements _MonthlyDayDto {
     status,
     checkIn,
     checkOut,
-    workingHours,
     lateMinutes,
+    workMinutes,
+    otMinutes,
   );
 
   /// Create a copy of MonthlyDayDto
@@ -474,8 +498,9 @@ abstract class _MonthlyDayDto implements MonthlyDayDto {
     required final String status,
     @JsonKey(name: 'check_in') final String? checkIn,
     @JsonKey(name: 'check_out') final String? checkOut,
-    @JsonKey(name: 'working_hours') final double workingHours,
     @JsonKey(name: 'late_minutes') final int lateMinutes,
+    @JsonKey(name: 'work_minutes') final int workMinutes,
+    @JsonKey(name: 'ot_minutes') final int otMinutes,
   }) = _$MonthlyDayDtoImpl;
 
   factory _MonthlyDayDto.fromJson(Map<String, dynamic> json) =
@@ -492,16 +517,355 @@ abstract class _MonthlyDayDto implements MonthlyDayDto {
   @JsonKey(name: 'check_out')
   String? get checkOut;
   @override
-  @JsonKey(name: 'working_hours')
-  double get workingHours;
-  @override
   @JsonKey(name: 'late_minutes')
   int get lateMinutes;
+  @override
+  @JsonKey(name: 'work_minutes')
+  int get workMinutes;
+  @override
+  @JsonKey(name: 'ot_minutes')
+  int get otMinutes;
 
   /// Create a copy of MonthlyDayDto
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$MonthlyDayDtoImplCopyWith<_$MonthlyDayDtoImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+MonthlySummaryDto _$MonthlySummaryDtoFromJson(Map<String, dynamic> json) {
+  return _MonthlySummaryDto.fromJson(json);
+}
+
+/// @nodoc
+mixin _$MonthlySummaryDto {
+  @JsonKey(name: 'total_days')
+  int get totalDays => throw _privateConstructorUsedError;
+  int get present => throw _privateConstructorUsedError;
+  int get late => throw _privateConstructorUsedError;
+  int get absent => throw _privateConstructorUsedError;
+  int get leave => throw _privateConstructorUsedError;
+  @JsonKey(name: 'total_work_minutes')
+  int get totalWorkMinutes => throw _privateConstructorUsedError;
+  @JsonKey(name: 'total_ot_minutes')
+  int get totalOtMinutes => throw _privateConstructorUsedError;
+  @JsonKey(name: 'total_late_minutes')
+  int get totalLateMinutes => throw _privateConstructorUsedError;
+
+  /// Serializes this MonthlySummaryDto to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of MonthlySummaryDto
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $MonthlySummaryDtoCopyWith<MonthlySummaryDto> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $MonthlySummaryDtoCopyWith<$Res> {
+  factory $MonthlySummaryDtoCopyWith(
+    MonthlySummaryDto value,
+    $Res Function(MonthlySummaryDto) then,
+  ) = _$MonthlySummaryDtoCopyWithImpl<$Res, MonthlySummaryDto>;
+  @useResult
+  $Res call({
+    @JsonKey(name: 'total_days') int totalDays,
+    int present,
+    int late,
+    int absent,
+    int leave,
+    @JsonKey(name: 'total_work_minutes') int totalWorkMinutes,
+    @JsonKey(name: 'total_ot_minutes') int totalOtMinutes,
+    @JsonKey(name: 'total_late_minutes') int totalLateMinutes,
+  });
+}
+
+/// @nodoc
+class _$MonthlySummaryDtoCopyWithImpl<$Res, $Val extends MonthlySummaryDto>
+    implements $MonthlySummaryDtoCopyWith<$Res> {
+  _$MonthlySummaryDtoCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of MonthlySummaryDto
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? totalDays = null,
+    Object? present = null,
+    Object? late = null,
+    Object? absent = null,
+    Object? leave = null,
+    Object? totalWorkMinutes = null,
+    Object? totalOtMinutes = null,
+    Object? totalLateMinutes = null,
+  }) {
+    return _then(
+      _value.copyWith(
+            totalDays: null == totalDays
+                ? _value.totalDays
+                : totalDays // ignore: cast_nullable_to_non_nullable
+                      as int,
+            present: null == present
+                ? _value.present
+                : present // ignore: cast_nullable_to_non_nullable
+                      as int,
+            late: null == late
+                ? _value.late
+                : late // ignore: cast_nullable_to_non_nullable
+                      as int,
+            absent: null == absent
+                ? _value.absent
+                : absent // ignore: cast_nullable_to_non_nullable
+                      as int,
+            leave: null == leave
+                ? _value.leave
+                : leave // ignore: cast_nullable_to_non_nullable
+                      as int,
+            totalWorkMinutes: null == totalWorkMinutes
+                ? _value.totalWorkMinutes
+                : totalWorkMinutes // ignore: cast_nullable_to_non_nullable
+                      as int,
+            totalOtMinutes: null == totalOtMinutes
+                ? _value.totalOtMinutes
+                : totalOtMinutes // ignore: cast_nullable_to_non_nullable
+                      as int,
+            totalLateMinutes: null == totalLateMinutes
+                ? _value.totalLateMinutes
+                : totalLateMinutes // ignore: cast_nullable_to_non_nullable
+                      as int,
+          )
+          as $Val,
+    );
+  }
+}
+
+/// @nodoc
+abstract class _$$MonthlySummaryDtoImplCopyWith<$Res>
+    implements $MonthlySummaryDtoCopyWith<$Res> {
+  factory _$$MonthlySummaryDtoImplCopyWith(
+    _$MonthlySummaryDtoImpl value,
+    $Res Function(_$MonthlySummaryDtoImpl) then,
+  ) = __$$MonthlySummaryDtoImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({
+    @JsonKey(name: 'total_days') int totalDays,
+    int present,
+    int late,
+    int absent,
+    int leave,
+    @JsonKey(name: 'total_work_minutes') int totalWorkMinutes,
+    @JsonKey(name: 'total_ot_minutes') int totalOtMinutes,
+    @JsonKey(name: 'total_late_minutes') int totalLateMinutes,
+  });
+}
+
+/// @nodoc
+class __$$MonthlySummaryDtoImplCopyWithImpl<$Res>
+    extends _$MonthlySummaryDtoCopyWithImpl<$Res, _$MonthlySummaryDtoImpl>
+    implements _$$MonthlySummaryDtoImplCopyWith<$Res> {
+  __$$MonthlySummaryDtoImplCopyWithImpl(
+    _$MonthlySummaryDtoImpl _value,
+    $Res Function(_$MonthlySummaryDtoImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of MonthlySummaryDto
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? totalDays = null,
+    Object? present = null,
+    Object? late = null,
+    Object? absent = null,
+    Object? leave = null,
+    Object? totalWorkMinutes = null,
+    Object? totalOtMinutes = null,
+    Object? totalLateMinutes = null,
+  }) {
+    return _then(
+      _$MonthlySummaryDtoImpl(
+        totalDays: null == totalDays
+            ? _value.totalDays
+            : totalDays // ignore: cast_nullable_to_non_nullable
+                  as int,
+        present: null == present
+            ? _value.present
+            : present // ignore: cast_nullable_to_non_nullable
+                  as int,
+        late: null == late
+            ? _value.late
+            : late // ignore: cast_nullable_to_non_nullable
+                  as int,
+        absent: null == absent
+            ? _value.absent
+            : absent // ignore: cast_nullable_to_non_nullable
+                  as int,
+        leave: null == leave
+            ? _value.leave
+            : leave // ignore: cast_nullable_to_non_nullable
+                  as int,
+        totalWorkMinutes: null == totalWorkMinutes
+            ? _value.totalWorkMinutes
+            : totalWorkMinutes // ignore: cast_nullable_to_non_nullable
+                  as int,
+        totalOtMinutes: null == totalOtMinutes
+            ? _value.totalOtMinutes
+            : totalOtMinutes // ignore: cast_nullable_to_non_nullable
+                  as int,
+        totalLateMinutes: null == totalLateMinutes
+            ? _value.totalLateMinutes
+            : totalLateMinutes // ignore: cast_nullable_to_non_nullable
+                  as int,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$MonthlySummaryDtoImpl implements _MonthlySummaryDto {
+  const _$MonthlySummaryDtoImpl({
+    @JsonKey(name: 'total_days') this.totalDays = 0,
+    this.present = 0,
+    this.late = 0,
+    this.absent = 0,
+    this.leave = 0,
+    @JsonKey(name: 'total_work_minutes') this.totalWorkMinutes = 0,
+    @JsonKey(name: 'total_ot_minutes') this.totalOtMinutes = 0,
+    @JsonKey(name: 'total_late_minutes') this.totalLateMinutes = 0,
+  });
+
+  factory _$MonthlySummaryDtoImpl.fromJson(Map<String, dynamic> json) =>
+      _$$MonthlySummaryDtoImplFromJson(json);
+
+  @override
+  @JsonKey(name: 'total_days')
+  final int totalDays;
+  @override
+  @JsonKey()
+  final int present;
+  @override
+  @JsonKey()
+  final int late;
+  @override
+  @JsonKey()
+  final int absent;
+  @override
+  @JsonKey()
+  final int leave;
+  @override
+  @JsonKey(name: 'total_work_minutes')
+  final int totalWorkMinutes;
+  @override
+  @JsonKey(name: 'total_ot_minutes')
+  final int totalOtMinutes;
+  @override
+  @JsonKey(name: 'total_late_minutes')
+  final int totalLateMinutes;
+
+  @override
+  String toString() {
+    return 'MonthlySummaryDto(totalDays: $totalDays, present: $present, late: $late, absent: $absent, leave: $leave, totalWorkMinutes: $totalWorkMinutes, totalOtMinutes: $totalOtMinutes, totalLateMinutes: $totalLateMinutes)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$MonthlySummaryDtoImpl &&
+            (identical(other.totalDays, totalDays) ||
+                other.totalDays == totalDays) &&
+            (identical(other.present, present) || other.present == present) &&
+            (identical(other.late, late) || other.late == late) &&
+            (identical(other.absent, absent) || other.absent == absent) &&
+            (identical(other.leave, leave) || other.leave == leave) &&
+            (identical(other.totalWorkMinutes, totalWorkMinutes) ||
+                other.totalWorkMinutes == totalWorkMinutes) &&
+            (identical(other.totalOtMinutes, totalOtMinutes) ||
+                other.totalOtMinutes == totalOtMinutes) &&
+            (identical(other.totalLateMinutes, totalLateMinutes) ||
+                other.totalLateMinutes == totalLateMinutes));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(
+    runtimeType,
+    totalDays,
+    present,
+    late,
+    absent,
+    leave,
+    totalWorkMinutes,
+    totalOtMinutes,
+    totalLateMinutes,
+  );
+
+  /// Create a copy of MonthlySummaryDto
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$MonthlySummaryDtoImplCopyWith<_$MonthlySummaryDtoImpl> get copyWith =>
+      __$$MonthlySummaryDtoImplCopyWithImpl<_$MonthlySummaryDtoImpl>(
+        this,
+        _$identity,
+      );
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$MonthlySummaryDtoImplToJson(this);
+  }
+}
+
+abstract class _MonthlySummaryDto implements MonthlySummaryDto {
+  const factory _MonthlySummaryDto({
+    @JsonKey(name: 'total_days') final int totalDays,
+    final int present,
+    final int late,
+    final int absent,
+    final int leave,
+    @JsonKey(name: 'total_work_minutes') final int totalWorkMinutes,
+    @JsonKey(name: 'total_ot_minutes') final int totalOtMinutes,
+    @JsonKey(name: 'total_late_minutes') final int totalLateMinutes,
+  }) = _$MonthlySummaryDtoImpl;
+
+  factory _MonthlySummaryDto.fromJson(Map<String, dynamic> json) =
+      _$MonthlySummaryDtoImpl.fromJson;
+
+  @override
+  @JsonKey(name: 'total_days')
+  int get totalDays;
+  @override
+  int get present;
+  @override
+  int get late;
+  @override
+  int get absent;
+  @override
+  int get leave;
+  @override
+  @JsonKey(name: 'total_work_minutes')
+  int get totalWorkMinutes;
+  @override
+  @JsonKey(name: 'total_ot_minutes')
+  int get totalOtMinutes;
+  @override
+  @JsonKey(name: 'total_late_minutes')
+  int get totalLateMinutes;
+
+  /// Create a copy of MonthlySummaryDto
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$MonthlySummaryDtoImplCopyWith<_$MonthlySummaryDtoImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

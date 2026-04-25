@@ -77,7 +77,7 @@ class DayDetailSheet extends StatelessWidget {
           _Row(
             icon: Icons.access_time,
             label: 'Giờ làm',
-            value: '${day.workingHours.toStringAsFixed(1)}h',
+            value: '${(day.workMinutes / 60).toStringAsFixed(1)}h',
           ),
           if (day.lateMinutes > 0)
             _Row(

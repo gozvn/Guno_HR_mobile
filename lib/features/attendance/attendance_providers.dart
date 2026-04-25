@@ -6,6 +6,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../app/providers.dart';
 import '../auth/domain/auth_state.dart';
 import '../auth/presentation/auth_notifier.dart';
+import '../requests/requests_providers.dart';
 import 'data/attendance_api.dart';
 import 'data/dto/attendance_record_dto.dart';
 import 'data/dto/location_dto.dart';
@@ -133,11 +134,10 @@ Future<AttendanceRecordDto?> todayAttendance(Ref ref) async {
 /// Monthly attendance for [year]/[month] — family provider.
 @riverpod
 Future<MonthlyAttendanceDto> monthlyAttendance(
-  Ref ref,
-  int year,
-  int month,
-) =>
-    ref.watch(attendanceApiProvider).fetchMonthly(year, month);
+  Ref ref, {
+  required String month,
+}) =>
+    ref.watch(attendanceApiProvider).fetchMonthly(month: month);
 
 // ---------------------------------------------------------------------------
 // Locations with 24h drift cache
@@ -186,3 +186,27 @@ final locationsProvider = FutureProvider<List<LocationDto>>((ref) async {
 
 // CheckInFlowController lives in:
 // presentation/check_in_flow/check_in_flow_controller.dart
+
+// ---------------------------------------------------------------------------
+// WFH gate — derived from approved WFH requests covering today.
+// Backend rejects WFH check-in with 403 when no approved request exists; we
+// pre-check this so the UI can guide the user to create one instead of
+// failing late in the wizard.
+
+@riverpod
+Future<bool> hasApprovedWfhToday(Ref ref) async {
+  final today = DateTime.now();
+  final monthStr = '${today.year.toString().padLeft(4, '0')}-'
+      '${today.month.toString().padLeft(2, '0')}';
+  final result = await ref.read(requestsApiProvider).list(
+        status: 'approved',
+        type: 'wfh',
+        month: monthStr,
+        limit: 50,
+      );
+  final todayStr = '$monthStr-${today.day.toString().padLeft(2, '0')}';
+  return result.items.any(
+    (r) => r.startDate.compareTo(todayStr) <= 0 &&
+        r.endDate.compareTo(todayStr) >= 0,
+  );
+}

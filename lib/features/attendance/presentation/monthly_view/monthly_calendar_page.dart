@@ -44,9 +44,12 @@ class _MonthlyCalendarPageState extends ConsumerState<MonthlyCalendarPage> {
         }
       });
 
+  String get _monthStr =>
+      '$_year-${_month.toString().padLeft(2, '0')}';
+
   @override
   Widget build(BuildContext context) {
-    final async = ref.watch(monthlyAttendanceProvider(_year, _month));
+    final async = ref.watch(monthlyAttendanceProvider(month: _monthStr));
 
     return Scaffold(
       appBar: AppBar(
@@ -79,7 +82,7 @@ class _MonthlyCalendarPageState extends ConsumerState<MonthlyCalendarPage> {
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: () => ref
-                    .invalidate(monthlyAttendanceProvider(_year, _month)),
+                    .invalidate(monthlyAttendanceProvider(month: _monthStr)),
                 child: const Text('Thử lại'),
               ),
             ],
