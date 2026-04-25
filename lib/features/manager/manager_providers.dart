@@ -46,6 +46,25 @@ bool isManager(Ref ref) {
 }
 
 // ---------------------------------------------------------------------------
+// Live-team membership gate — drives "Ca Live" visibility in More sheet.
+// Returns true when current user's employee_id exists in the pool roster.
+// Resolves false while the underlying list is loading so the menu item stays
+// hidden until membership is confirmed (avoids flicker).
+
+@riverpod
+bool isLiveMember(Ref ref) {
+  final user = switch (ref.watch(authNotifierProvider)) {
+    AuthAuthenticated(:final user) => user,
+    _ => null,
+  };
+  if (user == null) return false;
+  return ref.watch(liveTeamMembersProvider).maybeWhen(
+        data: (members) => members.any((m) => m.employeeId == user.id),
+        orElse: () => false,
+      );
+}
+
+// ---------------------------------------------------------------------------
 // Manager dashboard — auto-dispose so 60s timer stops when page pops
 
 @riverpod
@@ -78,13 +97,17 @@ Future<List<RequestDto>> pendingApprovals(Ref ref, String? typeFilter) =>
         ).then((r) => r.items);
 
 // ---------------------------------------------------------------------------
-// Pending count badge — polls every 60s
+// Pending count badge — polls every 60s.
+// Gated on Authenticated state so we don't spam 401s after logout (the
+// provider keeps a subscription until the listener tree is rebuilt).
 
 @riverpod
 Stream<int> pendingCount(Ref ref) async* {
-  // Emit immediately, then every 60 seconds.
+  bool isAuthed() => ref.read(authNotifierProvider) is AuthAuthenticated;
+  if (!isAuthed()) return;
   yield await ref.watch(requestsApiProvider).pendingCount();
   await for (final _ in Stream.periodic(const Duration(seconds: 60))) {
+    if (!isAuthed()) break;
     try {
       yield await ref.watch(requestsApiProvider).pendingCount();
     } catch (_) {
@@ -112,5 +135,34 @@ Future<List<LiveShiftDto>> liveShifts(
   Ref ref, {
   String? date,
   String? channel,
+  String? status,
+  String? rangeFrom,
+  String? rangeTo,
 }) =>
-    ref.watch(liveShiftsApiProvider).list(date: date, channel: channel);
+    ref.watch(liveShiftsApiProvider).list(
+          date: date,
+          channel: channel,
+          status: status,
+          from: rangeFrom,
+          to: rangeTo,
+        );
+
+@riverpod
+Future<Map<String, dynamic>> liveShiftsWeekly(
+  Ref ref, {
+  required String weekStart,
+  String? channel,
+}) =>
+    ref
+        .watch(liveShiftsApiProvider)
+        .weekly(weekStart: weekStart, channel: channel);
+
+@riverpod
+Future<List<Map<String, dynamic>>> liveShiftsMonthlySummary(
+  Ref ref, {
+  required String month,
+  String? channel,
+}) =>
+    ref
+        .watch(liveShiftsApiProvider)
+        .monthlySummary(month: month, channel: channel);

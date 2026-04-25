@@ -33,6 +33,37 @@ class LiveShiftsApi {
         .toList();
   }
 
+  /// GET /api/hr/live-shifts/weekly — grid data for a Monday-starting week.
+  /// Returns `{ week_start, week_end, shifts: [...], members: [...] }`.
+  Future<Map<String, dynamic>> weekly({
+    required String weekStart,
+    String? channel,
+  }) async {
+    final resp = await _dio.get<Map<String, dynamic>>(
+      '/api/hr/live-shifts/weekly',
+      queryParameters: {
+        'week_start': weekStart,
+        if (channel != null) 'channel': channel,
+      },
+    );
+    return resp.data!;
+  }
+
+  /// GET /api/hr/live-shifts/monthly-summary — aggregated per employee.
+  Future<List<Map<String, dynamic>>> monthlySummary({
+    required String month,
+    String? channel,
+  }) async {
+    final resp = await _dio.get<List<dynamic>>(
+      '/api/hr/live-shifts/monthly-summary',
+      queryParameters: {
+        'month': month,
+        if (channel != null) 'channel': channel,
+      },
+    );
+    return (resp.data ?? []).cast<Map<String, dynamic>>();
+  }
+
   /// POST /api/hr/live-shifts/:id/approve
   Future<void> approve(int id) async {
     await _dio.post<void>('/api/hr/live-shifts/$id/approve');

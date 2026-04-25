@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../app/theme/tokens.dart';
 import '../../data/dto/live_team_dto.dart';
 import '../../manager_providers.dart';
-import '../widgets/empty_state.dart';
-import 'shift_list_tile.dart';
+import 'tabs/monthly_summary_tab.dart';
+import 'tabs/pending_approval_tab.dart';
+import 'tabs/planned_shifts_tab.dart';
+import 'tabs/weekly_shifts_tab.dart';
 
+/// Ca Live workspace. Channel chips act as a global filter across all 4 tabs:
+/// Lịch tuần · Kế hoạch · Chờ duyệt · Tổng kết. Null channel = "Tất cả".
 class LiveShiftsPage extends ConsumerStatefulWidget {
   const LiveShiftsPage({super.key});
 
@@ -15,179 +18,97 @@ class LiveShiftsPage extends ConsumerStatefulWidget {
 }
 
 class _LiveShiftsPageState extends ConsumerState<LiveShiftsPage> {
-  DateTime _selectedDate = DateTime.now();
-  String? _selectedChannel;
-
-  String get _dateStr =>
-      '${_selectedDate.year}-'
-      '${_selectedDate.month.toString().padLeft(2, '0')}-'
-      '${_selectedDate.day.toString().padLeft(2, '0')}';
+  String? _channel;
 
   @override
   Widget build(BuildContext context) {
-    final shiftsAsync = ref.watch(
-      liveShiftsProvider(date: _dateStr, channel: _selectedChannel),
-    );
     final channelsAsync = ref.watch(liveChannelsProvider);
-    final cs = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Ca Live')),
-      body: Column(
-        children: [
-          _ShiftHeader(
-            selectedDate: _selectedDate,
-            selectedChannel: _selectedChannel,
-            channelsAsync: channelsAsync,
-            onDateChanged: (d) => setState(() => _selectedDate = d),
-            onChannelChanged: (c) => setState(() => _selectedChannel = c),
+    return DefaultTabController(
+      length: 4,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Ca Live'),
+          bottom: const TabBar(
+            isScrollable: true,
+            tabs: [
+              Tab(text: 'Lịch tuần'),
+              Tab(text: 'Kế hoạch'),
+              Tab(text: 'Chờ duyệt'),
+              Tab(text: 'Tổng kết'),
+            ],
           ),
-          const Divider(height: 1),
-          Expanded(
-            child: shiftsAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('Lỗi tải ca live', style: TextStyle(color: cs.error)),
-                    const SizedBox(height: 8),
-                    FilledButton(
-                      onPressed: () => ref.invalidate(liveShiftsProvider),
-                      child: const Text('Thử lại'),
-                    ),
-                  ],
-                ),
-              ),
-              data: (shifts) {
-                if (shifts.isEmpty) {
-                  return const EmptyState(
-                    icon: Icons.live_tv_outlined,
-                    message: 'Không có ca live trong ngày này',
-                  );
-                }
-                return RefreshIndicator(
-                  onRefresh: () async => ref.invalidate(liveShiftsProvider),
-                  child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: GuHrSpacing.gutter,
-                      vertical: GuHrSpacing.stackMd,
-                    ),
-                    itemCount: shifts.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
-                    itemBuilder: (_, i) => ShiftListTile(shift: shifts[i]),
-                  ),
-                );
-              },
+        ),
+        body: Column(
+          children: [
+            _ChannelFilter(
+              selected: _channel,
+              channelsAsync: channelsAsync,
+              onChanged: (c) => setState(() => _channel = c),
             ),
-          ),
-        ],
+            const Divider(height: 1),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  WeeklyShiftsTab(channel: _channel),
+                  PlannedShiftsTab(channel: _channel),
+                  PendingApprovalTab(channel: _channel),
+                  MonthlySummaryTab(channel: _channel),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-// ---------------------------------------------------------------------------
-// Date picker + channel filter header
-
-class _ShiftHeader extends StatelessWidget {
-  const _ShiftHeader({
-    required this.selectedDate,
-    required this.selectedChannel,
+class _ChannelFilter extends StatelessWidget {
+  const _ChannelFilter({
+    required this.selected,
     required this.channelsAsync,
-    required this.onDateChanged,
-    required this.onChannelChanged,
+    required this.onChanged,
   });
 
-  final DateTime selectedDate;
-  final String? selectedChannel;
+  final String? selected;
   final AsyncValue<List<LiveChannelDto>> channelsAsync;
-  final ValueChanged<DateTime> onDateChanged;
-  final ValueChanged<String?> onChannelChanged;
+  final ValueChanged<String?> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final dayLabel =
-        '${selectedDate.day.toString().padLeft(2, '0')}/'
-        '${selectedDate.month.toString().padLeft(2, '0')}/'
-        '${selectedDate.year}';
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: GuHrSpacing.gutter,
-        vertical: GuHrSpacing.stackMd,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return channelsAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (channels) {
+        if (channels.isEmpty) return const SizedBox.shrink();
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.chevron_left),
-                onPressed: () =>
-                    onDateChanged(selectedDate.subtract(const Duration(days: 1))),
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: FilterChip(
+                  label: const Text('Tất cả'),
+                  selected: selected == null,
+                  onSelected: (_) => onChanged(null),
+                ),
               ),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: selectedDate,
-                      firstDate: DateTime(2024),
-                      lastDate: DateTime.now().add(const Duration(days: 30)),
-                    );
-                    if (picked != null) onDateChanged(picked);
-                  },
-                  child: Center(
-                    child: Text(
-                      dayLabel,
-                      style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-                    ),
+              for (final ch in channels)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    label: Text(ch.name),
+                    selected: selected == ch.code,
+                    onSelected: (_) =>
+                        onChanged(selected == ch.code ? null : ch.code),
                   ),
                 ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.chevron_right),
-                onPressed: () =>
-                    onDateChanged(selectedDate.add(const Duration(days: 1))),
-              ),
             ],
           ),
-          channelsAsync.when(
-            loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
-            data: (channels) {
-              if (channels.isEmpty) return const SizedBox.shrink();
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: FilterChip(
-                        label: const Text('Tất cả'),
-                        selected: selectedChannel == null,
-                        onSelected: (_) => onChannelChanged(null),
-                      ),
-                    ),
-                    ...channels.map((ch) => Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: FilterChip(
-                            label: Text(ch.name),
-                            selected: selectedChannel == ch.code,
-                            onSelected: (_) => onChannelChanged(
-                              selectedChannel == ch.code ? null : ch.code,
-                            ),
-                          ),
-                        )),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
