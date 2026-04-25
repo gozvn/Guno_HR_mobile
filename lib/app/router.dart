@@ -18,12 +18,16 @@ import '../features/leave/presentation/leave_balances_page.dart';
 import '../features/manager/presentation/approvals_inbox_page.dart';
 import '../features/manager/presentation/live_shifts/live_shifts_page.dart';
 import '../features/manager/presentation/live_team/live_team_page.dart';
-import '../features/manager/presentation/manager_dashboard_page.dart';
 import '../features/profile/presentation/profile_edit_page.dart';
 import '../features/profile/presentation/profile_page.dart';
+import '../features/reports/presentation/attendance_report_page.dart';
+import '../features/reports/presentation/leave_balance_report_page.dart';
+import '../features/reports/presentation/reports_page.dart';
+import '../features/reports/presentation/requests_report_page.dart';
 import '../features/requests/presentation/create_request/create_request_page.dart';
 import '../features/requests/presentation/request_detail_page.dart';
 import '../features/requests/presentation/requests_tab_page.dart';
+import '../features/settings/presentation/settings_page.dart';
 import '../features/splash/splash_screen.dart';
 
 part 'router.g.dart';
@@ -33,24 +37,28 @@ abstract final class Routes {
   static const splash = 'splash';
   static const login = 'login';
   static const changePassword = 'change-password';
-  static const shell = 'shell';
   static const home = 'home';
   static const attendance = 'attendance';
   static const requests = 'requests';
   static const requestCreate = 'request-create';
   static const requestDetail = 'request-detail';
-  static const leaveBalances = 'leave-balances';
   static const profile = 'profile';
   static const profileEdit = 'profile-edit';
   static const companyCalendar = 'company-calendar';
-  static const companyDocs = 'company-docs';
   static const attendanceCheckIn = 'attendance-check-in';
   static const attendanceMonthly = 'attendance-monthly';
-  // Manager routes (phase-06)
-  static const manager = 'manager';
-  static const managerApprovals = 'manager-approvals';
-  static const managerLiveTeam = 'manager-live-team';
-  static const managerLiveShifts = 'manager-live-shifts';
+  // Promoted top-level routes (were nested under /home or /manager)
+  static const leave = 'leave';
+  static const docs = 'docs';
+  static const liveShifts = 'live-shifts';
+  static const settings = 'settings';
+  // Reports branch (replaces manager branch)
+  static const reports = 'reports';
+  static const reportsApprovals = 'reports-approvals';
+  static const reportsLiveTeam = 'reports-live-team';
+  static const reportsAttendance = 'reports-attendance';
+  static const reportsLeaveBalance = 'reports-leave-balance';
+  static const reportsRequests = 'reports-requests';
 }
 
 @riverpod
@@ -75,6 +83,10 @@ GoRouter router(Ref ref) {
       }
 
       if (authState is AuthAuthenticated) {
+        // Deprecation redirects — keep for ≥1 release so push payloads and
+        // saved shortcuts pointing at old nested paths don't 404.
+        final deprecated = _deprecationRedirect(location);
+        if (deprecated != null) return deprecated;
         // Authenticated — redirect away from auth screens.
         if (location == '/' || location == '/login') return '/home';
         return null;
@@ -105,11 +117,16 @@ GoRouter router(Ref ref) {
       ),
       // Tab shell — StatefulShellRoute.indexedStack preserves state per branch.
       // Sub-routes pushed inside a branch keep the bottom NavigationBar visible.
-      // Branch order: 0=home, 1=attendance, 2=requests, 3=manager, 4=profile.
+      // Branch order: 0=home, 1=attendance, 2=requests, 3=reports, 4=profile,
+      // 5=leave, 6=docs, 7=live-shifts, 8=settings.
+      //
+      // Branches 5-8 are "hidden" — they render inside the shell so the
+      // bottom NavigationBar stays visible, but TabShellScreen never lists
+      // them as destinations. Navigation goes through More sheet.
       StatefulShellRoute.indexedStack(
         builder: (_, __, shell) => TabShellScreen(navigationShell: shell),
         branches: [
-          // Branch 0 — Home / Dashboard + quick actions (leave, company calendar, company docs).
+          // Branch 0 — Home / Dashboard + company calendar (doc+leave promoted out).
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -118,19 +135,9 @@ GoRouter router(Ref ref) {
                 builder: (_, __) => const DashboardPage(),
                 routes: [
                   GoRoute(
-                    path: 'leave',
-                    name: Routes.leaveBalances,
-                    builder: (_, __) => const LeaveBalancesPage(),
-                  ),
-                  GoRoute(
                     path: 'company/calendar',
                     name: Routes.companyCalendar,
                     builder: (_, __) => const CompanyCalendarPage(),
-                  ),
-                  GoRoute(
-                    path: 'company/docs',
-                    name: Routes.companyDocs,
-                    builder: (_, __) => const CompanyDocumentsPage(),
                   ),
                 ],
               ),
@@ -193,30 +200,39 @@ GoRouter router(Ref ref) {
               ),
             ],
           ),
-          // Branch 3 — Manager dashboard + approvals + live-team + live-shifts.
-          // Non-manager users never tap this tab (hidden in NavigationBar),
-          // but the branch must exist for StatefulShellRoute's fixed branch count.
+          // Branch 3 — Reports (manager-only surface; visibility enforced in
+          // TabShellScreen). Approvals + live-team grouped under /reports.
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/manager',
-                name: Routes.manager,
-                builder: (_, __) => const ManagerDashboardPage(),
+                path: '/reports',
+                name: Routes.reports,
+                builder: (_, __) => const ReportsPage(),
                 routes: [
                   GoRoute(
                     path: 'approvals',
-                    name: Routes.managerApprovals,
+                    name: Routes.reportsApprovals,
                     builder: (_, __) => const ApprovalsInboxPage(),
                   ),
                   GoRoute(
                     path: 'live-team',
-                    name: Routes.managerLiveTeam,
+                    name: Routes.reportsLiveTeam,
                     builder: (_, __) => const LiveTeamPage(),
                   ),
                   GoRoute(
-                    path: 'live-shifts',
-                    name: Routes.managerLiveShifts,
-                    builder: (_, __) => const LiveShiftsPage(),
+                    path: 'attendance',
+                    name: Routes.reportsAttendance,
+                    builder: (_, __) => const AttendanceReportPage(),
+                  ),
+                  GoRoute(
+                    path: 'leave-balance',
+                    name: Routes.reportsLeaveBalance,
+                    builder: (_, __) => const LeaveBalanceReportPage(),
+                  ),
+                  GoRoute(
+                    path: 'requests',
+                    name: Routes.reportsRequests,
+                    builder: (_, __) => const RequestsReportPage(),
                   ),
                 ],
               ),
@@ -239,10 +255,64 @@ GoRouter router(Ref ref) {
               ),
             ],
           ),
+          // Branch 5 — Leave balances (hidden from NavigationBar, reachable
+          // via More sheet). Kept inside shell so bottom bar persists.
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/leave',
+                name: Routes.leave,
+                builder: (_, __) => const LeaveBalancesPage(),
+              ),
+            ],
+          ),
+          // Branch 6 — Company docs (hidden).
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/docs',
+                name: Routes.docs,
+                builder: (_, __) => const CompanyDocumentsPage(),
+              ),
+            ],
+          ),
+          // Branch 7 — Live shifts (hidden, shown in More for live-team + managers).
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/live-shifts',
+                name: Routes.liveShifts,
+                builder: (_, __) => const LiveShiftsPage(),
+              ),
+            ],
+          ),
+          // Branch 8 — Settings (hidden).
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/settings',
+                name: Routes.settings,
+                builder: (_, __) => const SettingsPage(),
+              ),
+            ],
+          ),
         ],
       ),
     ],
   );
+}
+
+/// Maps retired nested paths to their new top-level equivalents so external
+/// deep links (push payloads, notification actions, saved shortcuts) keep
+/// working for one release after the refactor.
+String? _deprecationRedirect(String location) {
+  if (location == '/home/leave') return '/leave';
+  if (location.startsWith('/home/company/docs')) return '/docs';
+  if (location.startsWith('/manager/live-shifts')) return '/live-shifts';
+  if (location == '/manager') return '/reports';
+  if (location.startsWith('/manager/approvals')) return '/reports/approvals';
+  if (location.startsWith('/manager/live-team')) return '/reports/live-team';
+  return null;
 }
 
 /// Bridges Riverpod auth state changes to GoRouter's ChangeNotifier interface.

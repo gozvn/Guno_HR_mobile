@@ -3,9 +3,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../manager/manager_providers.dart';
+import 'widgets/more_sheet.dart';
 
-// Tab shell — 4 tabs for employees, 5 for managers.
-// Uses ConsumerWidget so it can read isManagerProvider + pendingCountProvider.
+// Tab shell — always renders 5 slots. Chấm công sits in the centre slot to
+// emphasise the daily primary action; the surrounding slots are grouped by
+// frequency. Slot 3 is role-dependent (Hồ sơ for employees, Báo cáo for
+// managers). Slot 4 "Thêm" opens MoreSheet and never switches branches.
+//
+// Visible slot → branch:
+//   0 Trang chủ  → 0
+//   1 Đơn từ     → 2
+//   2 Chấm công  → 1   (centred, visually emphasised)
+//   3 Hồ sơ/BC   → 4 / 3 (role)
+//   4 Thêm       → none (modal sheet)
+
+const int _attendanceSlot = 2;
+const int _moreSlot = 4;
 
 class TabShellScreen extends ConsumerWidget {
   const TabShellScreen({super.key, required this.navigationShell});
@@ -17,13 +30,7 @@ class TabShellScreen extends ConsumerWidget {
     final isManager = ref.watch(isManagerProvider);
     final pendingCount = ref.watch(pendingCountProvider);
     final badgeCount = pendingCount.valueOrNull ?? 0;
-
-    // Tab indices depend on whether manager tab is present.
-    // Branch order in router: 0=home, 1=attendance, 2=requests, 3=manager(opt), 4=profile
-    // When not manager: branches 0,1,2,4(profile at idx 3 in nav)
-    // GoRouter StatefulShellRoute branch index is fixed — we always have 5 branches
-    // in the router; the manager branch simply renders an empty redirect for non-managers.
-    // We show/hide the destination but keep the branch active.
+    final cs = Theme.of(context).colorScheme;
 
     final destinations = <NavigationDestination>[
       const NavigationDestination(
@@ -32,61 +39,53 @@ class TabShellScreen extends ConsumerWidget {
         label: 'Trang chủ',
       ),
       const NavigationDestination(
-        icon: Icon(Icons.fingerprint_outlined),
-        selectedIcon: Icon(Icons.fingerprint),
-        label: 'Chấm công',
-      ),
-      const NavigationDestination(
         icon: Icon(Icons.inbox_outlined),
         selectedIcon: Icon(Icons.inbox),
         label: 'Đơn từ',
       ),
-      if (isManager)
-        NavigationDestination(
-          icon: badgeCount > 0
-              ? Badge.count(
-                  count: badgeCount > 99 ? 99 : badgeCount,
-                  child: const Icon(Icons.manage_accounts_outlined),
-                )
-              : const Icon(Icons.manage_accounts_outlined),
-          selectedIcon: badgeCount > 0
-              ? Badge.count(
-                  count: badgeCount > 99 ? 99 : badgeCount,
-                  child: const Icon(Icons.manage_accounts),
-                )
-              : const Icon(Icons.manage_accounts),
-          label: 'Quản lý',
+      // Centre — Chấm công emphasised with a filled circular badge.
+      NavigationDestination(
+        icon: _CenterIcon(
+          color: cs.primaryContainer,
+          iconColor: cs.onPrimaryContainer,
         ),
+        selectedIcon: _CenterIcon(
+          color: cs.primary,
+          iconColor: cs.onPrimary,
+        ),
+        label: 'Chấm công',
+      ),
+      // Slot 3 = Báo cáo for ALL roles. Page itself is role-aware: employees
+      // see personal reports (own monthly attendance, own leave balance);
+      // managers additionally see cross-employee reports + approvals banner.
+      // Hồ sơ moved into the More sheet for both roles.
+      NavigationDestination(
+        icon: _maybeBadge(
+          count: isManager ? badgeCount : 0,
+          child: const Icon(Icons.bar_chart_outlined),
+        ),
+        selectedIcon: _maybeBadge(
+          count: isManager ? badgeCount : 0,
+          child: const Icon(Icons.bar_chart),
+        ),
+        label: 'Báo cáo',
+      ),
       const NavigationDestination(
-        icon: Icon(Icons.person_outlined),
-        selectedIcon: Icon(Icons.person),
-        label: 'Hồ sơ',
+        icon: Icon(Icons.menu),
+        label: 'Thêm',
       ),
     ];
-
-    // Map visible index → branch index (account for hidden manager branch).
-    // Router branches: 0=home,1=attendance,2=requests,3=manager,4=profile.
-    int toBranchIndex(int visibleIdx) {
-      if (!isManager) {
-        // no manager tab: 0→0,1→1,2→2,3→4(profile)
-        return visibleIdx < 3 ? visibleIdx : visibleIdx + 1;
-      }
-      return visibleIdx; // 1:1 when manager tab present
-    }
-
-    int toVisibleIndex(int branchIdx) {
-      if (!isManager) {
-        return branchIdx < 3 ? branchIdx : branchIdx - 1;
-      }
-      return branchIdx;
-    }
 
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
-        selectedIndex: toVisibleIndex(navigationShell.currentIndex),
+        selectedIndex: _toVisibleIndex(navigationShell.currentIndex, isManager),
         onDestinationSelected: (visibleIdx) {
-          final branchIdx = toBranchIndex(visibleIdx);
+          if (visibleIdx == _moreSlot) {
+            MoreSheet.show(context);
+            return;
+          }
+          final branchIdx = _toBranchIndex(visibleIdx, isManager);
           navigationShell.goBranch(
             branchIdx,
             initialLocation: branchIdx == navigationShell.currentIndex,
@@ -96,4 +95,60 @@ class TabShellScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Visible slot → underlying branch index.
+/// Slot 3 always maps to branch 3 (reports). Profile is reached via More.
+int _toBranchIndex(int visibleIdx, bool _) {
+  switch (visibleIdx) {
+    case 0:
+      return 0; // home
+    case 1:
+      return 2; // requests
+    case _attendanceSlot:
+      return 1; // attendance (centre)
+    case 3:
+      return 3; // reports
+    default:
+      return 0; // safety; slot 4 (More) is handled before reaching here
+  }
+}
+
+/// Branch index → highlighted slot on the bottom bar.
+/// Hidden branches (4 profile, 5-8 leave/docs/live-shifts/settings) keep slot
+/// 4 (Thêm) highlighted since the user arrived through the More sheet.
+int _toVisibleIndex(int branchIdx, bool _) {
+  switch (branchIdx) {
+    case 0:
+      return 0;
+    case 1:
+      return _attendanceSlot;
+    case 2:
+      return 1;
+    case 3:
+      return 3;
+    default:
+      return _moreSlot; // hidden branches incl. profile (4) + 5..8
+  }
+}
+
+class _CenterIcon extends StatelessWidget {
+  const _CenterIcon({required this.color, required this.iconColor});
+  final Color color;
+  final Color iconColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      child: Icon(Icons.fingerprint, size: 26, color: iconColor),
+    );
+  }
+}
+
+Widget _maybeBadge({required int count, required Widget child}) {
+  if (count <= 0) return child;
+  return Badge.count(count: count > 99 ? 99 : count, child: child);
 }

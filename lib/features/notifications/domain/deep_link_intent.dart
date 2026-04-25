@@ -35,13 +35,13 @@ final class _Approvals extends DeepLinkIntent {
   final int? focusId;
   @override
   String get path =>
-      '/manager/approvals${focusId != null ? '?focus=$focusId' : ''}';
+      '/reports/approvals${focusId != null ? '?focus=$focusId' : ''}';
 }
 
 final class _LeaveBalance extends DeepLinkIntent {
   const _LeaveBalance();
   @override
-  String get path => '/home/leave';
+  String get path => '/leave';
 }
 
 final class _AttendanceCheckin extends DeepLinkIntent {
@@ -53,5 +53,5 @@ final class _AttendanceCheckin extends DeepLinkIntent {
 final class _ManagerDashboard extends DeepLinkIntent {
   const _ManagerDashboard();
   @override
-  String get path => '/manager';
+  String get path => '/reports';
 }
