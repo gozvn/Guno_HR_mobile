@@ -40,7 +40,7 @@ class ErrorMapperInterceptor extends Interceptor {
       case 400:
         return AppFailure.validation(message ?? 'Dữ liệu không hợp lệ');
       case 401:
-        return const AppFailure.unauthorized();
+        return AppFailure.unauthorized(message);
       case 403:
         final required = body is Map ? body['required'] : null;
         return AppFailure.forbidden(

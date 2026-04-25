@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
+
 import '../../../core/errors/app_failure.dart';
 import '../../../core/errors/result.dart';
 import '../../../core/storage/secure_storage.dart';
@@ -76,9 +78,12 @@ class AuthRepository {
   }
 
   AppFailure _mapException(Exception e) {
-    // DioException is mapped by ErrorMapperInterceptor to AppFailure;
-    // here we handle any residual raw exceptions.
+    // DioException is mapped by ErrorMapperInterceptor; unwrap the typed
+    // failure stashed in DioException.error before falling back to unknown.
     if (e is AppFailureException) return e.failure;
+    if (e is DioException && e.error is AppFailureException) {
+      return (e.error! as AppFailureException).failure;
+    }
     return AppFailure.unknown(e);
   }
 }

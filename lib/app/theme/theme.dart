@@ -17,17 +17,33 @@ ThemeData buildGuHrTheme() {
     textTheme: textTheme,
     extensions: const [GuHrColors.light],
 
-    // Cards — xl radius (12px), Level 1 shadow (tint-ink)
+    // Cards — xl radius (12px), brand-tinted soft shadow.
     cardTheme: CardThemeData(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(GuHrRadii.xl),
       ),
       color: Colors.white,
-      shadowColor: const Color(0xFF0F4C5C).withValues(alpha: 0.08),
+      shadowColor: cs.primary.withValues(alpha: 0.08),
     ),
 
-    // Elevated button — def radius (4px), Deep Teal fill
+    // Filled button (primary action) — brand orange fill.
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        backgroundColor: cs.primary,
+        foregroundColor: cs.onPrimary,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(GuHrRadii.def),
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: GuHrSpacing.gutter,
+          vertical: GuHrSpacing.stackMd,
+        ),
+        textStyle: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+      ),
+    ),
+
+    // Elevated button — same brand fill as Filled (def radius 4px).
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: cs.primary,
@@ -44,7 +60,7 @@ ThemeData buildGuHrTheme() {
       ),
     ),
 
-    // Outlined button — def radius, slate border
+    // Outlined button — brand-coloured text + neutral border.
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: cs.primary,
@@ -57,6 +73,17 @@ ThemeData buildGuHrTheme() {
           vertical: GuHrSpacing.stackMd,
         ),
       ),
+    ),
+
+    // Text button — brand-coloured label.
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(foregroundColor: cs.primary),
+    ),
+
+    // FAB — brand fill.
+    floatingActionButtonTheme: FloatingActionButtonThemeData(
+      backgroundColor: cs.primary,
+      foregroundColor: cs.onPrimary,
     ),
 
     // Input fields — 1px #E2E8F0 border, focus: primary 2px glow
@@ -106,7 +133,7 @@ ThemeData buildGuHrTheme() {
       labelTextStyle: WidgetStateProperty.all(textTheme.labelSmall),
     ),
 
-    scaffoldBackgroundColor: const Color(0xFFF7F9FB),
-    dividerColor: const Color(0xFFE2E8F0),
+    scaffoldBackgroundColor: cs.surface,
+    dividerColor: cs.outlineVariant,
   );
 }

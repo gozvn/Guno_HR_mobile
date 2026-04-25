@@ -20,7 +20,7 @@ mixin _$AppFailure {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(String message) network,
-    required TResult Function() unauthorized,
+    required TResult Function(String? message) unauthorized,
     required TResult Function(String? required) forbidden,
     required TResult Function(int code, String? message) server,
     required TResult Function(String message) validation,
@@ -29,7 +29,7 @@ mixin _$AppFailure {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(String message)? network,
-    TResult? Function()? unauthorized,
+    TResult? Function(String? message)? unauthorized,
     TResult? Function(String? required)? forbidden,
     TResult? Function(int code, String? message)? server,
     TResult? Function(String message)? validation,
@@ -38,7 +38,7 @@ mixin _$AppFailure {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(String message)? network,
-    TResult Function()? unauthorized,
+    TResult Function(String? message)? unauthorized,
     TResult Function(String? required)? forbidden,
     TResult Function(int code, String? message)? server,
     TResult Function(String message)? validation,
@@ -168,7 +168,7 @@ class _$NetworkImpl implements _Network {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(String message) network,
-    required TResult Function() unauthorized,
+    required TResult Function(String? message) unauthorized,
     required TResult Function(String? required) forbidden,
     required TResult Function(int code, String? message) server,
     required TResult Function(String message) validation,
@@ -181,7 +181,7 @@ class _$NetworkImpl implements _Network {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(String message)? network,
-    TResult? Function()? unauthorized,
+    TResult? Function(String? message)? unauthorized,
     TResult? Function(String? required)? forbidden,
     TResult? Function(int code, String? message)? server,
     TResult? Function(String message)? validation,
@@ -194,7 +194,7 @@ class _$NetworkImpl implements _Network {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(String message)? network,
-    TResult Function()? unauthorized,
+    TResult Function(String? message)? unauthorized,
     TResult Function(String? required)? forbidden,
     TResult Function(int code, String? message)? server,
     TResult Function(String message)? validation,
@@ -269,6 +269,8 @@ abstract class _$$UnauthorizedImplCopyWith<$Res> {
     _$UnauthorizedImpl value,
     $Res Function(_$UnauthorizedImpl) then,
   ) = __$$UnauthorizedImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String? message});
 }
 
 /// @nodoc
@@ -282,58 +284,83 @@ class __$$UnauthorizedImplCopyWithImpl<$Res>
 
   /// Create a copy of AppFailure
   /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({Object? message = freezed}) {
+    return _then(
+      _$UnauthorizedImpl(
+        freezed == message
+            ? _value.message
+            : message // ignore: cast_nullable_to_non_nullable
+                  as String?,
+      ),
+    );
+  }
 }
 
 /// @nodoc
 
 class _$UnauthorizedImpl implements _Unauthorized {
-  const _$UnauthorizedImpl();
+  const _$UnauthorizedImpl([this.message]);
+
+  @override
+  final String? message;
 
   @override
   String toString() {
-    return 'AppFailure.unauthorized()';
+    return 'AppFailure.unauthorized(message: $message)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is _$UnauthorizedImpl);
+        (other.runtimeType == runtimeType &&
+            other is _$UnauthorizedImpl &&
+            (identical(other.message, message) || other.message == message));
   }
 
   @override
-  int get hashCode => runtimeType.hashCode;
+  int get hashCode => Object.hash(runtimeType, message);
+
+  /// Create a copy of AppFailure
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$UnauthorizedImplCopyWith<_$UnauthorizedImpl> get copyWith =>
+      __$$UnauthorizedImplCopyWithImpl<_$UnauthorizedImpl>(this, _$identity);
 
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(String message) network,
-    required TResult Function() unauthorized,
+    required TResult Function(String? message) unauthorized,
     required TResult Function(String? required) forbidden,
     required TResult Function(int code, String? message) server,
     required TResult Function(String message) validation,
     required TResult Function(Object error) unknown,
   }) {
-    return unauthorized();
+    return unauthorized(message);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(String message)? network,
-    TResult? Function()? unauthorized,
+    TResult? Function(String? message)? unauthorized,
     TResult? Function(String? required)? forbidden,
     TResult? Function(int code, String? message)? server,
     TResult? Function(String message)? validation,
     TResult? Function(Object error)? unknown,
   }) {
-    return unauthorized?.call();
+    return unauthorized?.call(message);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(String message)? network,
-    TResult Function()? unauthorized,
+    TResult Function(String? message)? unauthorized,
     TResult Function(String? required)? forbidden,
     TResult Function(int code, String? message)? server,
     TResult Function(String message)? validation,
@@ -341,7 +368,7 @@ class _$UnauthorizedImpl implements _Unauthorized {
     required TResult orElse(),
   }) {
     if (unauthorized != null) {
-      return unauthorized();
+      return unauthorized(message);
     }
     return orElse();
   }
@@ -391,7 +418,15 @@ class _$UnauthorizedImpl implements _Unauthorized {
 }
 
 abstract class _Unauthorized implements AppFailure {
-  const factory _Unauthorized() = _$UnauthorizedImpl;
+  const factory _Unauthorized([final String? message]) = _$UnauthorizedImpl;
+
+  String? get message;
+
+  /// Create a copy of AppFailure
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$UnauthorizedImplCopyWith<_$UnauthorizedImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
@@ -466,7 +501,7 @@ class _$ForbiddenImpl implements _Forbidden {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(String message) network,
-    required TResult Function() unauthorized,
+    required TResult Function(String? message) unauthorized,
     required TResult Function(String? required) forbidden,
     required TResult Function(int code, String? message) server,
     required TResult Function(String message) validation,
@@ -479,7 +514,7 @@ class _$ForbiddenImpl implements _Forbidden {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(String message)? network,
-    TResult? Function()? unauthorized,
+    TResult? Function(String? message)? unauthorized,
     TResult? Function(String? required)? forbidden,
     TResult? Function(int code, String? message)? server,
     TResult? Function(String message)? validation,
@@ -492,7 +527,7 @@ class _$ForbiddenImpl implements _Forbidden {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(String message)? network,
-    TResult Function()? unauthorized,
+    TResult Function(String? message)? unauthorized,
     TResult Function(String? required)? forbidden,
     TResult Function(int code, String? message)? server,
     TResult Function(String message)? validation,
@@ -639,7 +674,7 @@ class _$ServerImpl implements _Server {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(String message) network,
-    required TResult Function() unauthorized,
+    required TResult Function(String? message) unauthorized,
     required TResult Function(String? required) forbidden,
     required TResult Function(int code, String? message) server,
     required TResult Function(String message) validation,
@@ -652,7 +687,7 @@ class _$ServerImpl implements _Server {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(String message)? network,
-    TResult? Function()? unauthorized,
+    TResult? Function(String? message)? unauthorized,
     TResult? Function(String? required)? forbidden,
     TResult? Function(int code, String? message)? server,
     TResult? Function(String message)? validation,
@@ -665,7 +700,7 @@ class _$ServerImpl implements _Server {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(String message)? network,
-    TResult Function()? unauthorized,
+    TResult Function(String? message)? unauthorized,
     TResult Function(String? required)? forbidden,
     TResult Function(int code, String? message)? server,
     TResult Function(String message)? validation,
@@ -806,7 +841,7 @@ class _$ValidationImpl implements _Validation {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(String message) network,
-    required TResult Function() unauthorized,
+    required TResult Function(String? message) unauthorized,
     required TResult Function(String? required) forbidden,
     required TResult Function(int code, String? message) server,
     required TResult Function(String message) validation,
@@ -819,7 +854,7 @@ class _$ValidationImpl implements _Validation {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(String message)? network,
-    TResult? Function()? unauthorized,
+    TResult? Function(String? message)? unauthorized,
     TResult? Function(String? required)? forbidden,
     TResult? Function(int code, String? message)? server,
     TResult? Function(String message)? validation,
@@ -832,7 +867,7 @@ class _$ValidationImpl implements _Validation {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(String message)? network,
-    TResult Function()? unauthorized,
+    TResult Function(String? message)? unauthorized,
     TResult Function(String? required)? forbidden,
     TResult Function(int code, String? message)? server,
     TResult Function(String message)? validation,
@@ -966,7 +1001,7 @@ class _$UnknownImpl implements _Unknown {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(String message) network,
-    required TResult Function() unauthorized,
+    required TResult Function(String? message) unauthorized,
     required TResult Function(String? required) forbidden,
     required TResult Function(int code, String? message) server,
     required TResult Function(String message) validation,
@@ -979,7 +1014,7 @@ class _$UnknownImpl implements _Unknown {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(String message)? network,
-    TResult? Function()? unauthorized,
+    TResult? Function(String? message)? unauthorized,
     TResult? Function(String? required)? forbidden,
     TResult? Function(int code, String? message)? server,
     TResult? Function(String message)? validation,
@@ -992,7 +1027,7 @@ class _$UnknownImpl implements _Unknown {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(String message)? network,
-    TResult Function()? unauthorized,
+    TResult Function(String? message)? unauthorized,
     TResult Function(String? required)? forbidden,
     TResult Function(int code, String? message)? server,
     TResult Function(String message)? validation,

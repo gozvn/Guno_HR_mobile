@@ -45,34 +45,54 @@ class AuthNotifier extends _$AuthNotifier {
     }
   }
 
-  Future<void> login(String email, String? password) async {
-    state = const AuthLoading();
+  /// Attempts login without committing navigation state. On success, persists
+  /// token and returns the outcome so UI can display a success notification
+  /// *before* calling [completeLogin] to transition to Authenticated.
+  Future<Result<LoginOutcome>> attemptLogin(
+      String email, String? password) async {
     final repo = ref.read(authRepositoryProvider);
     final result = await repo.login(email, password);
 
     switch (result) {
       case Ok(:final value):
         ref.read(tokenProvider.notifier).state = value.token;
-        final user = value.user.toDomain();
-        state = value.mustChangePassword
-            ? AuthForceChangePassword(user)
-            : AuthAuthenticated(user);
-        // Analytics + Crashlytics user context.
-        final analytics = ref.read(analyticsServiceProvider);
-        final crashlytics = ref.read(crashlyticsServiceProvider);
-        await analytics.log('login_success');
-        await analytics.setUser(user.id, user.role);
-        await crashlytics.setUser(user.id, user.role);
-        // Best-effort: register FCM token after login. Non-fatal if Firebase
-        // is not yet configured (placeholder firebase_options.dart).
-        _registerPushTokenAsync();
+        return Ok(LoginOutcome(
+          user: value.user.toDomain(),
+          mustChangePassword: value.mustChangePassword,
+        ));
       case Err(:final failure):
         state = AuthUnauthenticated(failure: failure);
         await ref.read(analyticsServiceProvider).log(
               'login_failed',
               params: {'reason': failure.toString()},
             );
+        return Err(failure);
     }
+  }
+
+  /// Commits a successful login into auth state. Triggers router redirect.
+  /// Split from [attemptLogin] so UI can show a success banner before nav.
+  Future<void> completeLogin(LoginOutcome outcome) async {
+    state = outcome.mustChangePassword
+        ? AuthForceChangePassword(outcome.user)
+        : AuthAuthenticated(outcome.user);
+    final analytics = ref.read(analyticsServiceProvider);
+    final crashlytics = ref.read(crashlyticsServiceProvider);
+    await analytics.log('login_success');
+    await analytics.setUser(outcome.user.id, outcome.user.role);
+    await crashlytics.setUser(outcome.user.id, outcome.user.role);
+    // Best-effort: register FCM token after login. Non-fatal if Firebase
+    // is not yet configured (placeholder firebase_options.dart).
+    _registerPushTokenAsync();
+  }
+
+  /// Convenience wrapper: attempt + commit back-to-back with no UI gap.
+  /// Retained for tests and any non-UI caller that doesn't need the pre-nav
+  /// notification window.
+  Future<void> login(String email, String? password) async {
+    state = const AuthLoading();
+    final result = await attemptLogin(email, password);
+    if (result case Ok(:final value)) await completeLogin(value);
   }
 
   Future<void> changePassword({
@@ -155,6 +175,14 @@ class AuthNotifier extends _$AuthNotifier {
       };
 }
 
+/// Returned by [AuthNotifier.attemptLogin]. Carries the resolved user and
+/// whether the backend requires a forced password change.
+class LoginOutcome {
+  const LoginOutcome({required this.user, required this.mustChangePassword});
+  final AuthUser user;
+  final bool mustChangePassword;
+}
+
 /// Public exception used to propagate AppFailure out of changePassword
 /// so the UI widget can catch and display the server message verbatim.
 class AuthChangePasswordException implements Exception {
@@ -163,7 +191,7 @@ class AuthChangePasswordException implements Exception {
 
   String get message => failure.when(
         network: (msg) => msg,
-        unauthorized: () => 'Mật khẩu hiện tại không đúng',
+        unauthorized: (msg) => msg ?? 'Mật khẩu hiện tại không đúng',
         forbidden: (req) => req ?? 'Không có quyền truy cập',
         server: (_, msg) => msg ?? 'Lỗi máy chủ',
         validation: (msg) => msg,

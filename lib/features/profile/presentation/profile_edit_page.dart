@@ -69,7 +69,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
       setState(() {
         _errorMsg = e.failure.when(
           network: (msg) => msg,
-          unauthorized: () => 'Phiên đăng nhập hết hạn',
+          unauthorized: (_) => 'Phiên đăng nhập hết hạn',
           forbidden: (msg) => msg ?? 'Không có quyền chỉnh sửa',
           server: (_, msg) => msg ?? 'Lỗi máy chủ',
           validation: (msg) => msg,

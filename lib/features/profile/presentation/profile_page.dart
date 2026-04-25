@@ -135,16 +135,18 @@ class ProfilePage extends ConsumerWidget {
   Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      // Use the dialog's own ctx for pops — outer context belongs to the
+      // shell navigator and popping it tears down the page (black screen).
+      builder: (ctx) => AlertDialog(
         title: const Text('Đăng xuất'),
         content: const Text('Bạn có chắc muốn đăng xuất?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(ctx, false),
             child: const Text('Huỷ'),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Đăng xuất'),
           ),
         ],

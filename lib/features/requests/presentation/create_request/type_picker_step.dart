@@ -70,7 +70,11 @@ class _TypeCard extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(type.icon, style: const TextStyle(fontSize: 30)),
+            Icon(
+              _iconForType(type),
+              size: 32,
+              color: cs.onSurface,
+            ),
             const SizedBox(height: 6),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -86,5 +90,31 @@ class _TypeCard extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+// Map known type codes to Material icons. Keeps visuals consistent when
+// backend ships emojis that don't render (or ships nothing) and ensures
+// every card has a glyph. Codes mirror backend seed in hr-schema-init.ts.
+IconData _iconForType(RequestTypeDto t) {
+  switch (t.code) {
+    case 'late_arrival':
+      return Icons.schedule;
+    case 'early_leave':
+      return Icons.directions_run;
+    case 'leave_unpaid':
+      return Icons.money_off;
+    case 'leave_annual':
+      return Icons.beach_access;
+    case 'ot':
+      return Icons.bolt;
+    case 'wfh':
+      return Icons.home_work_outlined;
+    case 'forgot_checkin':
+      return Icons.restore;
+    case 'correction':
+      return Icons.edit_note;
+    default:
+      return Icons.description_outlined;
   }
 }

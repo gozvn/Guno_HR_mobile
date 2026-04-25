@@ -7,7 +7,7 @@ part 'app_failure.freezed.dart';
 @freezed
 sealed class AppFailure with _$AppFailure {
   const factory AppFailure.network(String message) = _Network;
-  const factory AppFailure.unauthorized() = _Unauthorized;
+  const factory AppFailure.unauthorized([String? message]) = _Unauthorized;
   const factory AppFailure.forbidden(String? required) = _Forbidden;
   const factory AppFailure.server(int code, String? message) = _Server;
   const factory AppFailure.validation(String message) = _Validation;
