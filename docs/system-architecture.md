@@ -6,42 +6,103 @@
 
 ---
 
-## High-Level Architecture
+## Bottom Navigation Structure (R2 Final)
 
+**Fixed 5-slot layout with MoreSheet for additional items. Slot 4 "Báo cáo" is now UNIVERSAL (all roles):**
+
+### Employee View
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         GuHrApp (root)                          │
-│                    (ConsumerStatefulWidget)                     │
-└────────────────────────────┬────────────────────────────────────┘
-                             │
-                    ProviderScope (Riverpod)
-                             │
-        ┌────────────────────┼────────────────────┐
-        │                    │                    │
-    MaterialApp          Theme            go_router
-    (dark: off)        (Material 3)    (5 bottom tabs)
-        │                    │                    │
-        └────────────────────┴────────────────────┘
-                             │
-                   StatefulShellRoute
-                (Bottom nav persists across branches)
-                             │
-     ┌──────┬──────────┬──────────┬──────────┬──────────┐
-     │      │          │          │          │          │
-    Init  Branch 1   Branch 2   Branch 3   Branch 4   Branch 5
-    Auth  /home      /attend     /requests  /profile    /manager
-    (R0)  (R1)       (R1)        (R1)       (R1)        (R2*)
-           │          │           │          │           │
-          Home       Attendance   Requests  Profile      Manager
-          Screen     Tab Page     Tab Page  Page         Dashboard
-           │          │           │          │           │
-       Nested:   Nested:     Nested:    Nested:    Nested:
-       /leave    /check-in   /create    /edit      /approvals/:id
-       /calendar (modal)     (modal)    (modal)    /team
-       /docs                                       /shifts
-    
-* Manager tab only if isManager == true
+Slot Layout:
+[Trang chủ] | [Đơn từ] | [Chấm công]* | [Phép năm] | [Báo cáo]†
+                          (centred)
+
+*Chấm công: Attendance + check-in flow (circular FAB style)
+†Báo cáo: Reports landing (employee sees: personal monthly attendance, annual leave)
+  
+Thêm (More): Opens MoreSheet modal with:
+  - Tài liệu (documents)
+  - Cài đặt (settings)
+  - Ca Live (if live-team member)
+  - Hồ sơ (profile) — ALWAYS appended
 ```
+
+### Manager View
+```
+[Trang chủ] | [Đơn từ] | [Chấm công]* | [Phép năm] | [Báo cáo]†
+                          (centred)       (with badge)
+
+†Báo cáo: Reports landing (manager sees: personal + team sections + pending-approvals banner)
+  
+Thêm (More): Opens MoreSheet modal with:
+  - Tài liệu (documents)
+  - Ca Live
+  - Cài đặt (settings)
+  - Hồ sơ (profile) — ALWAYS appended
+```
+
+### Router: 9 StatefulShellRoute.indexedStack Branches
+```
+StatefulShellRoute (bottom nav persists)
+├─ Branch 0: /home
+│  └─ HomePage
+├─ Branch 1: /requests
+│  └─ RequestsTabPage
+│     └─ Sub: /requests/create → CreateRequestPage
+├─ Branch 2: /attendance
+│  └─ AttendanceTabPage
+│     └─ Sub: /attendance/monthly → MonthlyCalendarPage (with CalendarStatsBanner + OfficeLocationMap)
+│     └─ Sub: /attendance/check-in → CheckInFlowPage
+├─ Branch 3: /leave
+│  └─ LeaveBalancesPage
+├─ Branch 4: /reports (UNIVERSAL, role-aware)
+│  └─ ReportsPage (ConsumerWidget, role-aware sections)
+│     └─ Section "Cá nhân": Bảng công của tôi, Phép năm của tôi
+│     └─ Section "Quản lý" (manager only): Chấm công tháng, Phép năm, Đơn từ + pending-approvals banner
+│     └─ Sub: /reports/attendance
+│     └─ Sub: /reports/leave-balance
+│     └─ Sub: /reports/requests
+│     └─ Sub: /reports/live-shifts (manager only)
+├─ Branch 5: /profile (hidden, in MoreSheet for both roles)
+│  └─ ProfilePage
+│     └─ Sub: /profile/edit → ProfileEditPage
+├─ Branch 6: /docs (hidden, accessible via MoreSheet)
+│  └─ CompanyDocumentsPage
+├─ Branch 7: /live-team (hidden, accessible via MoreSheet)
+│  └─ LiveTeamPage
+└─ Branch 8: /settings (hidden, accessible via MoreSheet)
+   └─ SettingsPage
+```
+
+### Navigation Constants Updates
+**File:** `lib/app/router.dart` — Routes enum renamed:
+- Removed: `leaveBalances`, `companyDocs`, `manager*`
+- Added: `leave`, `docs`, `liveShifts`, `settings`, `reports`, `reportsApprovals`, `reportsLiveTeam`, `reportsAttendance`, `reportsLeaveBalance`, `reportsRequests`
+
+### Deprecation Redirects
+**Old paths → new paths** (1 release transition period):
+- `/home/leave` → `/leave`
+- `/home/company/docs` → `/docs`
+- `/manager` → `/reports`
+- `/manager/approvals` → `/reports/approvals`
+- `/manager/live-team` → `/reports/live-team`
+- `/manager/live-shifts` → `/live-shifts`
+
+Implemented in `_deprecationRedirect()` middleware.
+
+### MoreSheet Widget
+**File:** `lib/features/home/widgets/more_sheet.dart`
+
+Role-aware menu items (Hồ sơ ALWAYS appended):
+- **Employee:** Tài liệu, Cài đặt, Hồ sơ
+- **Employee + live-team member:** + Ca Live (before settings)
+- **Manager:** Ca Live, Tài liệu, Cài đặt, Hồ sơ
+
+Derived from `isLiveMemberProvider` in `manager_providers.dart` (watches `liveTeamMembersProvider` + current user ID).
+
+**TabShellScreen slot mapping (simplified):**
+- `_toBranchIndex` / `_toVisibleIndex` no longer role-conditional
+- Slot 3 → Branch 3 always (leaves)
+- Slot 4 → Branch 4 always (reports, content is role-aware)
 
 ---
 
@@ -193,11 +254,12 @@ app/providers.dart (Root)
 User taps "Đăng nhập" button
         │
         ├─→ LoginPage calls
-        │   authNotifierProvider.notifier.login(email, password)
+        │   authNotifierProvider.notifier.attemptLogin(email, password)
         │
-        ├─→ AuthNotifier.login() method:
+        ├─→ AuthNotifier.attemptLogin() → Result<LoginOutcome>:
         │   - Set state to AuthLoading
         │   - Call authRepositoryProvider.login(email, password)
+        │   - Returns LoginOutcome { user, mustChangePassword }
         │
         ├─→ AuthRepository.login():
         │   - Call authRemoteDataSourceProvider.login(email, password)
@@ -208,20 +270,28 @@ User taps "Đăng nhập" button
         │   - Network request sent
         │
         ├─→ Server response:
-        │   - 200: {"token": "eyJ...", "user": {...}}
-        │   - 400: {"error_message": "Email không tồn tại"}
+        │   - 200: {"token": "eyJ...", "user": {...}, "must_change_password": false}
+        │   - 401: {"error": "Email không tồn tại"}
         │
         ├─→ [ErrorMapperInterceptor]:
         │   - 200: passes {token, user} to repo
-        │   - 400: maps to AppFailure.validation("Email không tồn tại")
+        │   - 401: maps to AppFailure.unauthorized("Email không tồn tại")
+        │     (server message passed into unauthorized(message))
         │
-        ├─→ AuthRepository returns Result<AuthUser>:
-        │   - Ok(user) → save JWT to Keychain via authLocalDataSourceProvider
-        │   - Err(failure) → return to notifier
+        ├─→ AuthRepository._mapException():
+        │   - Unwraps DioException.error → AppFailureException
+        │   - Returns Result<AuthUser> with proper failure context
         │
-        ├─→ AuthNotifier:
-        │   - Ok: state = AuthState.authenticated(user)
-        │   - Err: state = AuthState.error(failure.message)
+        ├─→ LoginForm shows status banner (above inputs):
+        │   - On success: "Đăng nhập thành công. Đang chuyển trang…" (green)
+        │   - Waits 1.2s before calling completeLogin()
+        │   - On failure: SnackBar floating at bottom with server message
+        │     (e.g., "Email không tồn tại")
+        │
+        ├─→ AuthNotifier.completeLogin(outcome):
+        │   - Save JWT to Keychain via authLocalDataSourceProvider
+        │   - Set state = AuthState.authenticated(user)
+        │   - If mustChangePassword: state = AuthState.forceChangePassword(email)
         │
         ├─→ router.dart watches authNotifierProvider:
         │   - Detects AuthState.authenticated
@@ -229,6 +299,12 @@ User taps "Đăng nhập" button
         │
         └─→ HomeScreen appears (dashboard loads in parallel)
 ```
+
+**New pattern:**
+- `AuthNotifier.attemptLogin()` now split into attempt + complete phases
+- Old `login()` retained as thin wrapper for tests
+- LoginForm shows green banner on success, waits 1.2s, then calls complete
+- Server error messages display verbatim in SnackBar (Vietnamese localization)
 
 ---
 
@@ -372,6 +448,68 @@ Future<void> _retry(PendingCheckin pending) async {
   _notifyUserPersistentError(pending);
 }
 ```
+
+---
+
+## Data Flow: Monthly Attendance View
+
+```
+User navigates to Báo cáo → Bảng công của tôi (ReportsPage link)
+        │
+        ├─→ MonthlyCalendarPage receives month="YYYY-MM" param
+        │
+        ├─→ Calls monthlyAttendanceProvider(ref, month: "2026-04")
+        │   - Triggers AttendanceApi.fetchMonthly(month: "2026-04")
+        │   - Sends GET /api/hr/attendance/monthly?employee_id=me&month=2026-04
+        │   - [AuthInterceptor] injects JWT
+        │
+        ├─→ Server returns:
+        │   {
+        │     "rows": [
+        │       {"date": "2026-04-01", "workMinutes": 480, "otMinutes": 0, "status": "present", ...},
+        │       {"date": "2026-04-02", "workMinutes": 300, "otMinutes": 120, "status": "late", ...},
+        │       ...
+        │     ],
+        │     "summary": {
+        │       "totalDays": 22,
+        │       "present": 20,
+        │       "late": 2,
+        │       "absent": 0,
+        │       "leave": 0,
+        │       "totalWorkMinutes": 10560,
+        │       "totalOtMinutes": 120,
+        │       "totalLateMinutes": 45
+        │     }
+        │   }
+        │
+        ├─→ MonthlyAttendanceDto parsed:
+        │   - rows: List<MonthlyDayDto>
+        │   - summary: MonthlySummaryDto?
+        │
+        ├─→ CalendarStatsBanner (NEW widget above grid):
+        │   - Displays 4 stat tiles: Công, Trễ, Vắng, Phép (from summary if present; else rolls up from rows[])
+        │   - Total work hours (totalWorkMinutes / 60)
+        │   - Total late minutes
+        │
+        ├─→ CalendarGridWidget:
+        │   - Reads rows[]
+        │   - Bold-attended days: background alpha 0.30, bold text, thicker border
+        │   - Tap day: shows DayDetailSheet with workMinutes (÷60 for display)
+        │
+        └─→ Navigation link "Xem bảng công tháng" removed from AttendanceTabPage
+```
+
+**Multi-office resolution:** When user views location on map (OfficeLocationMap widget):
+- Uses nearest office from `resolveLocationCheck(userLat, userLng, offices[])`
+- Any office within `gpsRadiusM` qualifies as "in radius"
+- If multiple offices qualify, picks closest match
+- Falls back to nearest office (any radius) for WFH dialog reference
+
+**Apple Maps integration (iOS only):**
+- `OfficeLocationMap` renders AppleMap with user pin + office circle
+- Circle tinted brand orange, alpha 0.18
+- Dynamic camera based on user↔office bearing + distance
+- `myLocationEnabled: true` fallback
 
 ---
 
@@ -546,224 +684,27 @@ Future<List<PendingCheckin>> pendingCheckinsProvider(Ref ref) async {
 ---
 
 ## Deep-Link Handling (FCM + Router)
-
-### FCM Message Flow
-
-```
-Firebase Console sends push notification
-        │
-        ├─→ APNs delivers to iPhone
-        │
-        ├─→ firebase_messaging onMessage (app foreground):
-        │   - flutter_local_notifications shows banner
-        │   - User taps banner
-        │
-        ├─→ firebase_messaging onMessageOpenedApp:
-        │   - Handler reads message data: {intent: 'approval_detail', requestId: '123'}
-        │   - Calls deepLinkDispatcher.dispatch(intent)
-        │
-        ├─→ DeepLinkIntent sealed class:
-        │   const factory DeepLinkIntent.approvalDetail(int requestId) = ApprovalDetailIntent;
-        │   const factory DeepLinkIntent.checkInReminder() = CheckInReminderIntent;
-        │
-        ├─→ Deep-link dispatcher:
-        │   intent.when(
-        │     approvalDetail: (requestId) =>
-        │       context.go('/manager/approvals/$requestId'),
-        │     checkInReminder: () =>
-        │       context.go('/attendance'),
-        │   )
-        │
-        └─→ Router navigates to corresponding screen
-```
-
-**File:** `lib/features/notifications/presentation/notification_handler.dart`
-
-```dart
-class NotificationHandler {
-  static Future<void> _setupFcmListeners(BuildContext context) async {
-    // Foreground: notification received while app is open
-    FirebaseMessaging.onMessage.listen((message) {
-      _showForegroundNotification(message);
-    });
-
-    // Tap on notification (app was backgrounded)
-    FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      final intent = DeepLinkIntent.fromMessage(message.data);
-      _dispatchDeepLink(context, intent);
-    });
-
-    // App cold-started from notification tap
-    final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
-    if (initialMessage != null) {
-      final intent = DeepLinkIntent.fromMessage(initialMessage.data);
-      _dispatchDeepLink(context, intent);
-    }
-  }
-
-  static void _dispatchDeepLink(BuildContext context, DeepLinkIntent intent) {
-    intent.when(
-      approvalDetail: (requestId) {
-        context.go('/manager/approvals/$requestId');
-      },
-      checkInReminder: () {
-        context.go('/attendance');
-      },
-      requestDetail: (requestId) {
-        context.go('/requests/$requestId');
-      },
-    );
-  }
-}
-```
+FCM message received → `DeepLinkIntent` sealed class (approvalDetail, checkInReminder, requestDetail) → `NotificationHandler` dispatches to appropriate route via `context.go()`. Foreground notifications shown via `flutter_local_notifications` banner.
 
 ---
 
 ## Role-Based Access Control
 
-### Manager Detection
+**Manager detection:** `@riverpod bool isManager(Ref ref)` watches auth state; filters branch access in `StatefulShellRoute.indexedStack`.
 
-```dart
-@riverpod
-bool isManager(Ref ref) {
-  final authState = ref.watch(authNotifierProvider);
-  
-  return authState.whenData((state) {
-    if (state case AuthAuthenticated(:final user)) {
-      return user.isManager;
-    }
-    return false;
-  }).value ?? false;
-}
-```
+**MoreSheet menu:** Role-aware items determined by `isManagerProvider` + `isLiveMemberProvider` (derived from `liveTeamMembersProvider`).
 
-### Navigation Gating
-
-**StatefulShellRoute in `lib/app/router.dart`:**
-
-```dart
-StatefulShellRoute.indexedStack(
-  builder: (context, state, navigationShell) {
-    return TabShellScreen(navigationShell: navigationShell);
-  },
-  branches: [
-    StatefulShellBranch(
-      routes: [
-        GoRoute(
-          path: '/home',
-          name: Routes.home,
-          builder: (context, state) => const HomePage(),
-        ),
-      ],
-    ),
-    StatefulShellBranch(
-      routes: [
-        GoRoute(
-          path: '/attendance',
-          name: Routes.attendance,
-          builder: (context, state) => const AttendanceTabPage(),
-        ),
-      ],
-    ),
-    // ... more branches
-    StatefulShellBranch(
-      routes: [
-        GoRoute(
-          path: '/manager',
-          name: Routes.manager,
-          builder: (context, state) => const ManagerDashboardPage(),
-          // Redirect non-managers to home
-          redirect: (context, state) async {
-            final isManager = ref.read(isManagerProvider).value ?? false;
-            return isManager ? null : '/home';
-          },
-        ),
-      ],
-    ),
-  ],
-)
-```
-
-### Tab Visibility
-
-**File:** `lib/features/home/tab_shell_screen.dart`
-
-```dart
-class TabShellScreen extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isManager = ref.watch(isManagerProvider);
-    
-    return Scaffold(
-      body: widget.navigationShell,
-      bottomNavigationBar: NavigationBar(
-        destinations: [
-          const NavigationDestination(label: 'Home', icon: Icon(Icons.home)),
-          const NavigationDestination(label: 'Attendance', icon: Icon(Icons.checklist)),
-          const NavigationDestination(label: 'Requests', icon: Icon(Icons.mail)),
-          const NavigationDestination(label: 'Leave', icon: Icon(Icons.calendar_today)),
-          // Only show Manager tab if user.isManager
-          if (isManager.value ?? false)
-            const NavigationDestination(label: 'Manager', icon: Icon(Icons.supervised_user_circle)),
-        ],
-        onDestinationSelected: (index) {
-          widget.navigationShell.goBranch(index);
-        },
-        selectedIndex: _calculateSelectedIndex(context),
-      ),
-    );
-  }
-}
-```
+**Redirect pattern:** Non-managers deep-linking to `/reports/*` auto-redirect to `/home` via route guards.
 
 ---
 
 ## State Management Pattern
 
-### Feature State Notifier Template
+**StateNotifier + Result<T>:** Each feature has a notifier (Action methods → state mutation) + async providers (fetch data). All repository methods return `Result<T>` (Ok/Err) for exhaustive error handling.
 
-```dart
-// lib/features/{feature}/presentation/{feature}_notifier.dart
-class MyFeatureNotifier extends StateNotifier<MyFeatureState> {
-  MyFeatureNotifier(this._repository)
-      : super(const MyFeatureState.loading());
+**Example:** `AuthNotifier.attemptLogin(email, password) → Result<LoginOutcome>`, then `completeLogin(outcome)` updates state + saves JWT to Keychain.
 
-  final MyFeatureRepository _repository;
-
-  // Action method
-  Future<void> doSomething(String param) async {
-    state = const MyFeatureState.loading();
-    
-    final result = await _repository.performAction(param);
-    
-    state = result.when(
-      ok: (data) => MyFeatureState.loaded(data),
-      err: (failure) => MyFeatureState.error(failure.userMessage),
-    );
-  }
-}
-
-// lib/features/{feature}/{feature}_providers.dart
-@riverpod
-StateNotifier<MyFeatureState> myFeatureNotifier(Ref ref) {
-  final repo = ref.watch(myFeatureRepositoryProvider);
-  return MyFeatureNotifier(repo);
-}
-
-// Usage in widget:
-class MyPage extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(myFeatureNotifierProvider);
-    
-    return state.when(
-      loading: () => const LoadingWidget(),
-      loaded: (data) => ListView(children: [...]),
-      error: (msg) => ErrorWidget(message: msg),
-    );
-  }
-}
-```
+See `code-standards.md` for detailed patterns (Riverpod Providers section).
 
 ---
 
@@ -805,32 +746,19 @@ flutter run
 | Layer | TTL | Strategy |
 |-------|-----|----------|
 | **HTTP (dio_cache_interceptor)** | Per response `cache-control` header | GET endpoints only |
-| **Drift (local DB)** | Never (manual refresh) | locations_cache, request_types_cache |
-| **Riverpod (in-memory)** | Auto-dispose on ref loss | Dashboard data, user profile |
+| **locations_cache (drift)** | 1h (reduced from 24h for admin-added offices) | Refreshed on login + manual refresh |
+| **request_types_cache (drift)** | Never (manual refresh) | Loaded on app start |
+| **Riverpod (in-memory)** | Auto-dispose on ref loss | Dashboard data, monthly attendance, user profile |
 | **JSON deserialization** | None | Lazy on access (no eager parsing) |
 
 ### Image Optimization (Check-in Selfie)
-
-```dart
-// Before upload:
-// 1. Capture via camera package
-// 2. Load into image.Image
-// 3. Resize to 1024×1024 (downscale if larger)
-// 4. Compress JPEG quality 80 → retry 60 if >2MB
-// 5. Encode base64 → upload in JSON body (NOT multipart)
-
-final image = img.decodeImage(await file.readAsBytes())!;
-final resized = img.copyResize(image, width: 1024, height: 1024);
-final jpeg = img.encodeJpg(resized, quality: 80);
-return base64Encode(jpeg);
-```
+Selfies resized to 1024×1024, compressed JPEG quality 80, then base64-encoded in JSON body (not multipart).
 
 ---
 
 ## Unresolved
 
-- **Biometric auth:** Not yet integrated (planned R3)
-- **Offline sync for non-check-in:** Requests/leave not queued offline
-- **Concurrent manager approvals:** Single-action only, batch approval TBD
-- **Push notification rate limiting:** Server side not yet documented
-- **Device fingerprinting:** For FCM targeting (multiple devices per user)
+- Biometric auth (R3)
+- Offline sync for requests/leave (not queued)
+- Batch manager approvals (single-action only)
+- Device fingerprinting for multi-device FCM targeting

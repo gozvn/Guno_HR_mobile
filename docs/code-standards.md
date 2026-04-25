@@ -678,133 +678,107 @@ Widget build(BuildContext context) => Container(
 ---
 
 ## SQLite Bool-as-Int DTO Pattern
-
-### The Problem
-Backend uses SQLite which stores booleans as integers (0/1). When returned in JSON, Flutter deserializes as int, not bool. DTOs must handle defensive parsing.
-
-### The Solution
-Add a top-level helper function + `@JsonKey(fromJson:...)` to each bool field:
-
-```dart
-// lib/features/attendance/data/checkin_response_dto.dart
-import 'package:freezed_annotation/freezed_annotation.dart';
-
-part 'checkin_response_dto.freezed.dart';
-part 'checkin_response_dto.g.dart';
-
-bool _toBool(Object? v) => v == true || v == 1 || v == '1';
-
-@freezed
-class CheckinResponseDto with _$CheckinResponseDto {
-  const factory CheckinResponseDto({
-    @JsonKey(fromJson: _toBool)
-    required bool ok,  // Server: 0 or 1
-    @JsonKey(fromJson: _toBool)
-    required bool photoSaved,  // Server: 0 or 1
-    required String? message,
-  }) = _CheckinResponseDto;
-
-  factory CheckinResponseDto.fromJson(Map<String, dynamic> json) =>
-      _$CheckinResponseDtoFromJson(json);
-}
-```
-
-**Usage:**
-```dart
-// Server sends: {"ok": 1, "photo_saved": 0, "message": null}
-final dto = CheckinResponseDto.fromJson({
-  'ok': 1,  // int
-  'photo_saved': 0,  // int
-  'message': null,
-});
-// Result: ok=true, photoSaved=false ✓
-```
-
-### DTOs Already Patched
-- `location_dto.dart` — `is_active`
-- `checkin_response_dto.dart` — `ok`, `photo_saved`
-- `attendance_record_dto.dart` — `is_lack_working_point`
-- `live_team_dto.dart` — `active`
-- `login_response.dart` — `must_change_password`
-
-### Don't Hardcode Type Assumptions
-```dart
-// Bad
-final isActive = response['is_active'] as bool;  // Crashes if int
-
-// Good (with _toBool helper)
-@JsonKey(fromJson: _toBool)
-required bool isActive,  // Handles 0, 1, '0', '1', true, false
-```
+Backend SQLite stores booleans as 0/1 integers. Add top-level `bool _toBool(Object? v) => v == true || v == 1 || v == '1';` + `@JsonKey(fromJson: _toBool)` to each bool field. Applied in: `location_dto.dart`, `checkin_response_dto.dart`, `attendance_record_dto.dart`, `live_team_dto.dart`, `login_response.dart`.
 
 ---
 
 ## Riverpod Lifecycle Mutation Safety
-
-### The Problem
-Riverpod prohibits state mutations in `build()` or `initState()`. Calling notifier methods directly in these phases causes crashes.
-
-### The Solution
-Wrap side effects in `WidgetsBinding.instance.addPostFrameCallback()`:
-
-```dart
-// Bad ✗
-@override
-void initState() {
-  super.initState();
-  ref.read(checkInProvider.notifier).startFlow();  // Riverpod mutation in build phase
-}
-
-// Good ✓
-@override
-void initState() {
-  super.initState();
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    ref.read(checkInProvider.notifier).startFlow();  // Safe post-frame
-  });
-}
-```
-
-**Usage in codebase:** `CreateRequestPage.initState()` uses this pattern to safely initialize form state.
+Riverpod prohibits state mutations in `build()` or `initState()`. Wrap side effects in `WidgetsBinding.instance.addPostFrameCallback()` to defer until post-frame. Example: `CreateRequestPage.initState()`.
 
 ---
 
 ## Vietnamese Localization
+All user-facing strings start vi_VN, English fallback. Server-provided error messages (e.g., "Email đã được sử dụng") displayed verbatim without re-translation. See `design-guidelines.md` for Vietnamese copy conventions (Nghỉ phép, Check-in, Phê duyệt, etc.).
 
-### Copy Always Starts Vietnamese (vi_VN)
-All user-facing strings in Vietnamese first, English fallback in `en_US` locale:
+---
+
+## Server-Summary-or-Local-Compute Pattern
+
+When displaying aggregate stats (e.g., monthly attendance totals):
+1. If server provides `summary` object, use it directly (canonical)
+2. Else, compute from detail rows `rows[]` locally (defensive fallback)
+
+**Example (CalendarStatsBanner):**
 ```dart
-// lib/l10n/app_vi.arb
-{
-  "loginTitle": "Đăng nhập",
-  "loginButton": "Đăng nhập",
-  "errorInvalidEmail": "Email không hợp lệ",
-  "checkinSuccess": "Đã check-in lúc {time}"
-}
+final totalDays = data.summary?.totalDays ?? data.rows.length;
+final totalPresent = data.summary?.present ?? 
+  data.rows.where((r) => r.status == 'present').length;
+```
 
-// lib/l10n/app_en.arb
-{
-  "loginTitle": "Login",
-  "loginButton": "Sign In",
-  "errorInvalidEmail": "Invalid email",
-  "checkinSuccess": "Checked in at {time}"
+**Benefit:** Handles incomplete migrations; server can optimize (compute once) without blocking UI.
+
+---
+
+## Match-Then-Nearest Location Resolver
+
+When validating user location against multiple offices:
+1. Check if user is within radius of ANY office (`distance ≤ office.gpsRadiusM`)
+2. If multiple offices match, pick the geographically closest
+3. Fall back to nearest office (any radius) for reference display
+
+**Example (Check-in flow):**
+```dart
+LocationDto? resolveLocationCheck(double userLat, double userLng, List<LocationDto> offices) {
+  // Find all qualifying (in-radius) locations
+  final qualifying = offices.where((o) => _distance(userLat, userLng, o) <= o.gpsRadiusM).toList();
+  if (qualifying.isNotEmpty) {
+    qualifying.sort((a, b) => _distance(userLat, userLng, a).compareTo(_distance(userLat, userLng, b)));
+    return qualifying.first;  // Closest match
+  }
+  // Fall back to nearest office (for "outside" reference)
+  offices.sort((a, b) => _distance(userLat, userLng, a).compareTo(_distance(userLat, userLng, b)));
+  return offices.first;
 }
 ```
 
-### Server-Provided Error Messages
-Server returns Vietnamese error text verbatim:
+**Benefit:** Allows multi-office check-in; user only needs to be within ONE boundary.
+
+---
+
+## Dialog BuildContext Capture Pattern
+
+When dismissing a dialog via navigator, capture the dialog's own `BuildContext` (from builder callback), not the outer page context. Popping with outer context can unwind the StatefulShellRoute stack → black screen.
+
+**Bad:**
 ```dart
-// Server: {"error_message": "Email đã được sử dụng"}
-// Display directly (no re-translation):
-final failure = AppFailure.validation(response.data['error_message']);
-// Shows to user: "Email đã được sử dụng"
+showDialog(
+  context: context,  // Outer page context
+  builder: (_) {
+    return AlertDialog(
+      actions: [
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context),  // ✗ Pops page context
+          child: Text('Đóng'),
+        ),
+      ],
+    );
+  },
+);
 ```
+
+**Good:**
+```dart
+showDialog(
+  context: context,
+  builder: (dialogCtx) {  // Capture dialog's own context
+    return AlertDialog(
+      actions: [
+        ElevatedButton(
+          onPressed: () => Navigator.pop(dialogCtx),  // ✓ Pops dialog only
+          child: Text('Đóng'),
+        ),
+      ],
+    );
+  },
+);
+```
+
+**Benefit:** Prevents accidental page navigation when dismissing dialogs.
 
 ---
 
 ## Unresolved
 
-- **Null safety exceptions:** Rare DioException on network loss (not yet fully hardened)
-- **Concurrent requests:** No race condition detection; Riverpod handles sequencing
-- **Memory profiling:** Drift caches not yet profiled for large datasets
-- **Biometric auth:** Phase-02 password-only; biometrics planned for R3
+- Concurrent requests (no race detection; Riverpod handles sequencing)
+- Memory profiling for Drift caches
+- Biometric auth (Phase-02 password-only; R3 planned)

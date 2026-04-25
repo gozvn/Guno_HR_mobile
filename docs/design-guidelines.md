@@ -9,30 +9,33 @@
 
 ## Color System
 
-### Material 3 Palette
+### Material 3 Palette (HR-Web Brand)
 
-**Primary (Teal)**
-- Primary: `#0F4C5C` (dark teal, brand dominant)
+**Primary (HR-Web Orange)** — *matches hr-web brand identity*
+- Primary: `#E8642C` (warm orange, brand dominant)
 - On Primary: `#FFFFFF` (white text on primary)
-- Primary Container: `#A3E4F3` (light teal background)
-- On Primary Container: `#001F25` (dark text on light teal)
+- Primary Container: `#FFDBCB` (light orange background)
+- On Primary Container: `#381000` (dark text on light orange)
+- Inverse Primary: `#FFB59A` (inverse accent)
+- Primary Fixed Dim: `#F0845A` (light variant)
+- On Primary Fixed Variant: `#C94D1A` (dark variant)
 
-**Secondary (Sage)**
-- Secondary: `#669087` (muted green)
+**Secondary (Warm Brown)**
+- Secondary: `#77564A` (warm brown, harmonizes with orange)
 - On Secondary: `#FFFFFF` (white text)
-- Secondary Container: `#EAF8F4` (very light green background)
-- On Secondary Container: `#1F352E` (dark text)
+- Secondary Container: (derived from primary warmth)
+- On Secondary Container: (derived from primary warmth)
 
-**Tertiary (Emerald)**
-- Tertiary: `#6A8532` (organic green)
+**Tertiary (Green)** — *for positive/approved actions*
+- Tertiary: `#006D44` (organic green)
 - On Tertiary: `#FFFFFF` (white text)
-- Tertiary Container: `#EBF1B8` (pale green background)
-- On Tertiary Container: `#1F3600` (dark text)
+- Tertiary Container: (derived)
+- On Tertiary Container: (derived)
 
-**Neutral (Grays)**
-- Surface: `#FFFBFE` (near white)
+**Neutral (Warm Beige)**
+- Surface: (warmed to beige tones for brand harmony)
 - On Surface: `#1C1B1F` (almost black text)
-- Surface Variant: `#F3EEF5` (light gray background)
+- Surface Variant: (warm gray background)
 - On Surface Variant: `#49454E` (medium gray text)
 - Outline: `#9E9EA0` (border/divider)
 - Outline Variant: `#C4C7C5` (lighter border)
@@ -48,26 +51,28 @@
 
 **File:** `lib/app/theme/colors.dart`
 
+Primary palette now derives from hr-web brand orange (`#E8642C`). Use `Theme.of(context).colorScheme.primary` for brand consistency.
+
 ```dart
 class GuHrColors extends ThemeExtension<GuHrColors> {
   GuHrColors({
-    required this.primaryTeal,
-    required this.sageBg,
-    required this.emeraldSuccess,
+    required this.primaryFixed,      // Orange
+    required this.primaryFixedDim,   // Light orange variant
+    required this.onPrimaryFixedVariant,  // Dark orange variant
     required this.neutralText,
     // ...
   });
 
-  final Color primaryTeal;
-  final Color sageBg;
-  final Color emeraldSuccess;
+  final Color primaryFixed;
+  final Color primaryFixedDim;
+  final Color onPrimaryFixedVariant;
   final Color neutralText;
   // ...
 
   static const light = GuHrColors(
-    primaryTeal: Color(0xFF0F4C5C),
-    sageBg: Color(0xFF669087),
-    emeraldSuccess: Color(0xFF6A8532),
+    primaryFixed: Color(0xFFE8642C),     // Brand orange
+    primaryFixedDim: Color(0xFFF0845A),  // Light orange
+    onPrimaryFixedVariant: Color(0xFFC94D1A),  // Dark orange
     neutralText: Color(0xFF1C1B1F),
     // ...
   );
@@ -84,10 +89,12 @@ class GuHrColors extends ThemeExtension<GuHrColors> {
 
 // Usage in widgets:
 Container(
-  color: Theme.of(context).extension<GuHrColors>()?.primaryTeal,
+  color: Theme.of(context).colorScheme.primary,  // Orange #E8642C
   child: Text('Đăng nhập'),
 )
 ```
+
+**Design source:** `lib/app/theme/colors.dart` is now the source of truth. Design.md is deprecated for color reference.
 
 ### Accessibility
 - **Contrast ratios:** All text ≥4.5:1 (WCAG AA)
@@ -265,6 +272,29 @@ class DashboardPage extends StatelessWidget {
 }
 ```
 
+### Cards & Elevation
+- **Card shadow:** Tinted brand orange (primary color), not neutral gray
+- **Background:** Surface color (warm beige)
+- **Border radius:** 8px (md)
+- **Elevation:** 2 (default), 5 (modal/dialog)
+
+### Monthly Attendance UI (CalendarStatsBanner)
+**4-stat header tiles above calendar grid:**
+- Công (present): Primary orange background, white text
+- Trễ (late): Warning orange-shade background
+- Vắng (absent): Neutral surface
+- Phép (leave): Tertiary green background
+- Total work hours + total late minutes in secondary rows
+- Prefers server `summary`; falls back to client roll-up from `rows[]`
+
+**Calendar day cells:**
+- Attended days: background alpha 0.30 (darker), bold number text, thicker border
+- Other days: background alpha 0.15, regular text
+
+### Map Circle (Apple Maps)
+- Radius circle tinted brand primary (#E8642C), alpha 0.18 (subtle overlay)
+- User pin: red marker at GPS location
+
 ---
 
 ## Border Radius
@@ -356,41 +386,25 @@ AlertDialog(
 ### Buttons
 
 **Elevated Button** (primary action)
-- Height: 48px
-- Padding: 16px horizontal
-- Background: Primary color
-- Text color: On Primary (white)
-- Text style: Label Large (14px, 500 weight)
-- Radius: 2px
+- Height: 48px, Background: Primary (#E8642C), Text: On Primary (white)
 - Example: "Đăng nhập", "Gửi đơn"
 
-**Filled Button** (secondary action)
-- Height: 48px
-- Padding: 16px horizontal
-- Background: Secondary container
-- Text color: On Secondary container
-- Text style: Label Large
-- Radius: 2px
-- Example: "Lưu nháp", "Cập nhật"
+**Filled Button** (secondary action, BRAND ORANGE)
+- Height: 48px, Background: Primary (#E8642C via FilledButtonTheme), Text: On Primary (white)
+- Removed hardcoded `Colors.orange.shade700` from WFH/location buttons — inherit theme
+- Example: "Chấm công WFH", "Xác nhận"
+
+**Text Button** (minimal action, BRAND ORANGE)
+- Height: auto, Background: Transparent, Text: Primary (#E8642C via TextButtonTheme)
+- Example: "Xem thêm", "Hủy"
 
 **Outlined Button** (tertiary action)
-- Height: 48px
-- Padding: 16px horizontal
-- Border: 1px, outline color
-- Background: Transparent
-- Text color: On Surface
-- Text style: Label Large
-- Radius: 2px
-- Example: "Hủy", "Từ chối"
+- Height: 48px, Border: 1px outline, Background: Transparent
+- Example: "Từ chối"
 
-**Text Button** (minimal action)
-- Height: auto (typically 40px min)
-- Padding: 8px horizontal
-- Background: Transparent
-- Text color: Primary
-- Text style: Label Large
-- Radius: 2px
-- Example: "Xem thêm", "Đóng"
+**Floating Action Button**
+- Background: Primary (#E8642C via FloatingActionButtonTheme)
+- Example: Check-in action (circular centered in attendance tab)
 
 ### Input Fields
 
@@ -413,9 +427,17 @@ AlertDialog(
 - Elevation: 5
 - Overlay (scrim): 32% black
 
-### Snackbars
+### Status Banners & Snackbars
 
-**Position:** Bottom, above safe area
+**Status Banner (login success):**
+- Position: Above form inputs, full width
+- Background: Tertiary green (approved color)
+- Text: "Đăng nhập thành công. Đang chuyển trang…"
+- Duration: 1.2s before navigation redirect
+- Animation: Fade in/out
+
+**Snackbars:**
+- Position: Bottom, above safe area
 - Height: 48px (single line) / 64px (two lines)
 - Padding: 12px horizontal, 12px vertical
 - Text: 14px, body medium
@@ -424,6 +446,7 @@ AlertDialog(
 - Border radius: 4px
 - Duration: 4s (default), 10s (error)
 - Action button: Tertiary color text
+- **Floating** when success (floats above bottom nav)
 
 ### Loading Indicators
 

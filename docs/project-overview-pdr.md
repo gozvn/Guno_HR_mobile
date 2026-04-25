@@ -41,11 +41,14 @@ GU employees + managers currently rely on Telegram Mini App for HR self-service 
 - **Push notifications:** FCM → deep-link to approval inbox (infrastructure code-ready, requires backend `register-device` endpoint)
 
 ### R2 In-Scope Features
-- **Manager Dashboard:** team checkins, active requests, shift summaries
-- **Approvals Inbox:** requests awaiting manager approval with detail view
+- **Manager Dashboard:** team checkins, active requests, shift summaries (deprecated, replaced by Reports page)
+- **Reports Landing Page:** manager-only with 3 entry cards (attendance, leave-balance, requests) + pending-approvals badge
+- **Attendance/Leave-Balance/Requests Reports:** detailed views with status filters + month/date pickers
+- **Approvals Inbox:** requests awaiting manager approval with detail view (now under /reports/approvals)
 - **Approve/Reject:** inline action buttons, success/error handling
 - **Live Team:** roster view, search, roles visible
-- **Live Shifts:** list, approve, reject, delete shifts (requires manager role gate)
+- **Live Shifts:** 4-tab layout (weekly, planned, pending-approval, monthly-summary) with channel filter chips
+- **Settings Page (MVP):** change password, logout, app version footer (employee + manager feature)
 
 ### Out of Scope (R3+)
 - Department/position/role CRUD → desktop `hr-web`
@@ -134,6 +137,7 @@ GU employees + managers currently rely on Telegram Mini App for HR self-service 
 | **Offline DB** | drift 2.18 | Type-safe SQLite, auto-migrations; vs. hive (untyped) |
 | **Geolocation** | geolocator 12 | Robust accuracy/permission handling; vs. location (stale) |
 | **Camera** | camera 0.11 | Native CameraController; vs. image_picker (gallery-focused) |
+| **Maps (iOS)** | apple_maps_flutter 1.3.0 | Native Apple Maps; iOS-only (no Android equivalent yet) |
 | **Push** | firebase_messaging + APNs | Apple's unified platform; vs. OneSignal (vendor lock) |
 | **Design** | Material 3 (Flutter material package) | Brand alignment; vs. Cupertino (iOS-only, legacy look) |
 | **Font** | Inter via google_fonts | DESIGN.md spec; vs. roboto (wrong brand) |

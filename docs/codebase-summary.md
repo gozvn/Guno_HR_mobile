@@ -4,8 +4,9 @@
 **Language:** Dart 3.11.5  
 **Framework:** Flutter 3.41.7  
 **Total LOC:** ~12,934 hand-authored  
-**Files:** 180+ Dart source files  
+**Files:** 185+ Dart source files  
 **Tests:** 164 unit/widget tests (0 flaky)  
+**iOS Deps Added:** apple_maps_flutter ^1.3.0  
 
 ---
 
@@ -52,15 +53,22 @@ lib/
 │   │   ├── data/
 │   │   │   ├── auth_remote_data_source.dart  # POST /login, /change-password, /logout
 │   │   │   ├── auth_local_data_source.dart   # Keychain JWT CRUD
-│   │   │   ├── auth_dto.dart                 # @freezed: LoginRequest, ChangePasswordRequest, etc.
-│   │   │   └── auth_repository.dart          # Result<T> composition layer
+│   │   │   ├── auth_dto.dart                 # @freezed: LoginRequest, ChangePasswordRequest, LoginOutcome
+│   │   │   └── auth_repository.dart          # Result<T> composition layer (unwraps DioException.error)
 │   │   ├── domain/
-│   │   │   ├── auth_state.dart          # @freezed: AuthLoading | AuthAuthenticated | etc.
+│   │   │   ├── auth_state.dart          # @freezed: AuthLoading | AuthAuthenticated | ForceChangePassword | etc.
 │   │   │   ├── auth_user.dart           # @freezed: email, phone, role, is_manager
+│   │   │   ├── login_outcome.dart       # @freezed: { user, mustChangePassword }
 │   │   │   └── auth_models.dart         # LoginCredentials, UserProfile
 │   │   ├── presentation/
-│   │   │   ├── auth_notifier.dart       # StateNotifier<AuthState> + login/logout/changePassword methods
+│   │   │   ├── auth_notifier.dart       # StateNotifier<AuthState>
+│   │   │   │   - attemptLogin(email, password) → Result<LoginOutcome>
+│   │   │   │   - completeLogin(outcome) → updates state, saves JWT
+│   │   │   │   - login() [thin wrapper for tests]
+│   │   │   │   - logout(), changePassword()
 │   │   │   ├── login_page.dart          # Email + password form
+│   │   │   │   (shows green banner above inputs on success, waits 1.2s)
+│   │   │   │   (shows SnackBar at bottom on failure with server message)
 │   │   │   ├── change_password_page.dart # Forced change-password on first login
 │   │   │   └── auth_providers.dart      # @riverpod annotated providers
 │   │   └── auth_providers.dart          # Feature root (auth_providers.g.dart generated)
@@ -82,9 +90,9 @@ lib/
 │   │   └── dashboard_providers.dart      # Feature root
 │   ├── attendance/
 │   │   ├── data/
-│   │   │   ├── attendance_remote_data_source.dart  # GET /attendance, POST /checkins
+│   │   │   ├── attendance_remote_data_source.dart  # GET /attendance, POST /checkins, fetchMonthly(month="YYYY-MM") (updated)
 │   │   │   ├── attendance_local_db.dart   # drift: PendingCheckins table + dao
-│   │   │   ├── attendance_dto.dart        # AttendanceRecord, CheckInRequest (GPS + selfie + base64)
+│   │   │   ├── attendance_dto.dart        # AttendanceRecord, CheckInRequest, MonthlyAttendanceDto, MonthlyDayDto (updated), MonthlySummaryDto (NEW)
 │   │   │   ├── offline_retry_worker.dart  # Exponential backoff: 5s→25s→2m→10m→1h (capped)
 │   │   │   └── attendance_repository.dart # Result<T> with offline queue logic
 │   │   ├── domain/
@@ -99,14 +107,19 @@ lib/
 │   │   │   │   ├── gps_permission_widget.dart
 │   │   │   │   ├── camera_capture_widget.dart  # camera package integration
 │   │   │   │   ├── image_preview_widget.dart   # Resize + compress to JPEG before base64
+│   │   │   │   ├── location_preview_step.dart  # Updated brand-theme; passes coords to map
+│   │   │   │   ├── office_location_map.dart    # AppleMap iOS: user pin + office radius circle (NEW)
+│   │   │   │   ├── wfh_redirect_dialog.dart    # Updated brand-theme
 │   │   │   │   └── check_in_notifier.dart      # Orchestrate flow state
 │   │   │   ├── monthly_view/
 │   │   │   │   ├── monthly_calendar_page.dart  # Grid with attendance status badges
-│   │   │   │   └── attendance_status_cell.dart
+│   │   │   │   ├── calendar_stats_banner.dart  # 4-stat header: Công/Trễ/Vắng/Phép + hours + late mins (NEW)
+│   │   │   │   └── calendar_grid_widget.dart   # Day cells w/ bold-attended styling, reads rows[]
 │   │   │   ├── widgets/
 │   │   │   │   ├── check_in_card.dart
 │   │   │   │   ├── offline_queue_indicator.dart # Shows pending checks waiting sync
-│   │   │   │   └── location_radius_indicator.dart
+│   │   │   │   ├── location_radius_indicator.dart
+│   │   │   │   └── day_detail_sheet.dart       # Reads workMinutes instead of workingHours
 │   │   │   └── attendance_providers.dart
 │   │   ├── database/
 │   │   │   ├── attendance_database.dart   # drift @DriftDatabase (PendingCheckins + LocationsCache tables)
@@ -186,35 +199,62 @@ lib/
 │   │   └── company_providers.dart        # Feature root
 │   ├── manager/ (R2)
 │   │   ├── data/
-│   │   │   ├── manager_remote_data_source.dart  # GET /manager/dashboard, /approvals, /team, /shifts
+│   │   │   ├── manager_remote_data_source.dart  # GET /reports, /live-team, /live-shifts (endpoints)
 │   │   │   ├── manager_dto.dart                 # ManagerDashboard, ApprovalItem, ShiftData
-│   │   │   └── manager_repository.dart          # Result<T>
+│   │   │   ├── manager_repository.dart          # Result<T>
+│   │   │   └── live_shifts_api.dart             # LiveShiftsApi.weekly(), .monthlySummary()
 │   │   ├── domain/
 │   │   │   ├── manager_state.dart        # @freezed: Loading | Loaded | ActionInProgress | Failed
 │   │   │   ├── manager_models.dart       # TeamMember, Shift, ApprovalDetail
 │   │   │   └── manager_actions.dart      # ApproveRequest, RejectRequest, ApproveShift, etc.
 │   │   ├── presentation/
-│   │   │   ├── manager_dashboard_page.dart       # Summary: today checkins, pending approvals, shifts
-│   │   │   ├── approvals_inbox_page.dart         # List of requests awaiting approval
+│   │   │   ├── live_shifts/
+│   │   │   │   ├── live_shifts_page.dart         # Channel filter chips (TikTok/Facebook/Shopee/Other)
+│   │   │   │   ├── tabs/
+│   │   │   │   │   ├── weekly_shifts_tab.dart        # Week picker + grouped by date
+│   │   │   │   │   ├── planned_shifts_tab.dart       # status='planned', next 30 days
+│   │   │   │   │   ├── pending_approval_tab.dart     # status='worked' (approve/reject embedded)
+│   │   │   │   │   └── monthly_summary_tab.dart      # Month picker + per-employee totals
+│   │   │   │   └── shift_list_tile.dart              # Reusable shift item with approval actions
 │   │   │   ├── live_team/
 │   │   │   │   ├── live_team_page.dart           # Roster with search + role filter
 │   │   │   │   └── team_member_card.dart         # Member detail in modal
-│   │   │   ├── live_shifts/
-│   │   │   │   ├── live_shifts_page.dart         # Shift list + approve/reject/delete buttons
-│   │   │   │   └── shift_card.dart
+│   │   │   ├── reports/
+│   │   │   │   ├── reports_page.dart              # Manager-only landing with 3 entry cards
+│   │   │   │   ├── attendance_report_page.dart    # Monthly attendance GET /api/hr/reports/monthly-attendance
+│   │   │   │   ├── leave_balance_report_page.dart # GET /api/hr/reports/leave-balance
+│   │   │   │   └── requests_report_page.dart      # GET /api/hr/reports/requests (status filter chips)
 │   │   │   ├── widgets/
 │   │   │   │   ├── approval_action_buttons.dart  # Approve/reject inline
 │   │   │   │   ├── shift_status_badge.dart
 │   │   │   │   └── team_summary_card.dart
 │   │   │   └── manager_providers.dart
-│   │   └── manager_providers.dart        # Feature root
+│   │   └── manager_providers.dart        # Feature root (includes isLiveMemberProvider)
+│   ├── settings/
+│   │   ├── presentation/
+│   │   │   ├── settings_page.dart         # MVP: Đổi mật khẩu, Đăng xuất, app-version footer
+│   │   │   │   (reuses NotificationsSettingsTile from notifications feature)
+│   │   │   │   (reuses confirm dialog for logout)
+│   │   │   └── settings_providers.dart
+│   │   └── settings_providers.dart        # Feature root
+│   ├── reports/
+│   │   ├── data/
+│   │   │   ├── reports_api.dart           # API wrapper for 3 report endpoints
+│   │   │   └── reports_repository.dart
+│   │   ├── presentation/
+│   │   │   ├── reports_page.dart          # ConsumerWidget, role-aware (employee: Cá nhân section, manager: Quản lý + pending banner)
+│   │   │   ├── attendance_report_page.dart
+│   │   │   ├── leave_balance_report_page.dart
+│   │   │   ├── requests_report_page.dart  # Status filter chips
+│   │   │   └── reports_providers.dart
+│   │   └── reports_providers.dart         # Feature root
 │   └── notifications/
 │       ├── data/
 │       │   ├── notification_remote_data_source.dart  # POST /register-device, DELETE /register-device
 │       │   └── notification_repository.dart          # Result<T>
 │       ├── domain/
 │       │   ├── notification_state.dart    # @freezed: Registered | RegistrationFailed
-│       │   ├── deep_link_intent.dart      # @freezed enum: ApprovalDetail | CheckInReminder | etc.
+│       │   ├── deep_link_intent.dart      # @freezed enum: ApprovalDetail | CheckInReminder (updated paths)
 │       │   └── notification_models.dart
 │       ├── presentation/
 │       │   ├── notification_handler.dart   # FCM message listener + deep-link dispatcher
@@ -383,30 +423,34 @@ required bool fieldName
 
 **Benefit:** Handles SQLite int 0/1 seamlessly; no client-side int→bool casting logic.
 
-### 10. Router: Nested Branches with Bottom Nav Persistence
-All pushed routes (check-in, request create, manager approvals, etc.) now nest under branches via `StatefulShellRoute`. This keeps bottom nav visible:
+### 10. Router: Fixed 5-Slot Bottom Nav with MoreSheet (R2 Final)
+All routes nest under `StatefulShellRoute.indexedStack` (9 branches). Bottom nav shows 5 slots + MoreSheet modal for additional items. Slot 4 "Báo cáo" is now UNIVERSAL (all roles):
 
 ```
-StatefulShellRoute (5 branches)
-├─ Branch: /home
-│  └─ HomeScreen
-├─ Branch: /attendance
-│  └─ AttendanceTabPage
-│     └─ Sub-route: /attendance/check-in (nested, nav persists)
-├─ Branch: /requests
-│  └─ RequestsTabPage
-│     └─ Sub-route: /requests/create (nested, nav persists)
-├─ Branch: /profile
-│  └─ ProfilePage
-│     └─ Sub-route: /profile/edit (nested, nav persists)
-└─ Branch: /manager (R2, conditional)
-   └─ ManagerDashboardPage
-      └─ Sub-route: /manager/approvals/{id} (nested, nav persists)
+StatefulShellRoute (9 branches: 5 visible in nav, 4 hidden)
+├─ Branch 0: /home → HomeScreen
+├─ Branch 1: /requests → RequestsTabPage
+├─ Branch 2: /attendance → AttendanceTabPage
+├─ Branch 3: /leave → LeaveBalancesPage
+├─ Branch 4: /reports → ReportsPage (UNIVERSAL: role-aware content for employee + manager)
+│  ├─ Sub: /reports/attendance (employee: personal; manager: team monthly)
+│  ├─ Sub: /reports/leave-balance (employee: personal; manager: team)
+│  ├─ Sub: /reports/requests
+│  └─ Sub: /reports/live-shifts (manager only)
+├─ Branch 5: /profile (hidden, in MoreSheet for both roles) — MOVED from slot 3
+├─ Branch 6: /docs (hidden, accessed via MoreSheet)
+├─ Branch 7: /live-team (hidden, accessed via MoreSheet)
+└─ Branch 8: /settings (hidden, accessed via MoreSheet)
 ```
 
-**Path migration:** `/leave` → `/home/leave`, `/company/calendar` → `/home/company/calendar`, etc.
+**MoreSheet:** Now always appends profile entry (both employee + manager); was conditional in R1.
 
-**Benefit:** Consistent navigation; users can tap bottom nav to escape modals.
+**TabShellScreen:** Simplified `_toBranchIndex` / `_toVisibleIndex` — slot 3 → branch 3 unconditionally (no role check).
+
+**Deprecation redirects** (1-release transition):
+- `/home/leave` → `/leave`, `/home/company/docs` → `/docs`, `/manager` → `/reports`, `/manager/approvals` → `/reports/approvals`, `/manager/live-team` → `/reports/live-team`, `/manager/live-shifts` → `/live-shifts`
+
+**Benefit:** Fixed nav, universal Báo cáo slot, profile always in MoreSheet, bottom nav persists for escape routes.
 
 ### 11. JSON Field Naming (snake_case)
 **build.yaml:**
@@ -423,15 +467,18 @@ Server sends `{"email_address": "..."}` → Flutter model has `emailAddress` fie
 
 **Benefit:** No per-field `@JsonKey('email_address')` boilerplate, consistency across all models.
 
-### 12. Material 3 Design System
-- **Colors:** Primary `#0F4C5C` (teal), Secondary `#669087` (sage), Tertiary `#6A8532` (emerald)
+### 12. Material 3 Design System (HR-Web Brand Adoption)
+- **Colors:** Primary `#E8642C` (hr-web brand orange), Secondary `#77564A` (warm brown), Tertiary `#006D44` (green for approvals)
+  - Primary variants: PrimaryFixedDim `#F0845A`, OnPrimaryFixedVariant `#C94D1A`
+  - Surface tones warmed to beige for brand harmony
 - **Typography:** Inter font (6 scales: display-lg, headline-md, title-sm, body-md, body-sm, label-caps)
 - **Spacing:** 8px base unit (8, 16, 24, 32, 48)
 - **Radii:** 2px (sm) → 4px → 8px → 12px (xl)
 - **Elevation:** 0 (surface) → 5 (modal)
 - **Vietnamese-first copy:** All user-facing strings start vi_VN, en_US fallback
+- **Source of truth:** `lib/app/theme/colors.dart` (not DESIGN.md)
 
-**Benefit:** Consistent brand, Material 3 compliance, accessible contrast ratios.
+**Benefit:** Consistent with hr-web brand, Material 3 compliance, accessible contrast ratios.
 
 ---
 
@@ -523,7 +570,26 @@ dart run build_runner watch --delete-conflicting-outputs
 
 ---
 
-### 11. Riverpod Lifecycle Mutation Safety
+### 11. Request Type Icons (Material Icons, Not Emoji)
+Request list tiles and type pickers now use Material Icons keyed by request `type` code (e.g., `late_arrival` → `schedule`, `leave_annual` → `beach_access`, `ot` → `bolt`, `wfh` → `home_work_outlined`). Helper `_iconForRequestType(code)` ensures consistent rendering when emoji glyphs fail across devices.
+
+**Applied in:**
+- `request_list_tile.dart` — displays icon beside request type name
+- `type_picker_step.dart` — shows icon in type selection dropdown
+
+**Benefit:** Consistent rendering, fallback if emoji glyphs unavailable.
+
+### 12. WFH Check-in Flow (Smart Pre-approval Check)
+`hasApprovedWfhTodayProvider` in `attendance_providers.dart`:
+- Queries `/api/hr/requests?status=approved&type=wfh&month=YYYY-MM`
+- Filters where today ∈ [start_date, end_date]
+- `WfhRedirectDialog` pre-checks provider before showing actions:
+  - Approved exists → "Huỷ" / "Chấm công WFH" (submit allowed)
+  - No approved → "Huỷ" / "Tạo đơn WFH" (no submit path → no late 403 surprise)
+
+**Benefit:** Prevents 403 errors on submit; guides users to create request first if needed.
+
+### 13. Riverpod Lifecycle Mutation Safety
 Riverpod prohibits state mutations in `build()` or `initState()`. When initializing flows with side effects, wrap in `WidgetsBinding.instance.addPostFrameCallback()`:
 
 ```dart
@@ -545,6 +611,55 @@ void initState() {
 ```
 
 **Example:** `CreateRequestPage.initState()` uses this pattern to avoid Riverpod mutation errors during page mount.
+
+### 14. Monthly Attendance API Shape & Provider
+`AttendanceApi.fetchMonthly({required String month})` signature changed (month param is `"YYYY-MM"` format). Server response shape:
+```dart
+// Old (R1): { year, month, days[] }
+// New (R2): { rows[], summary? }
+```
+
+**MonthlyAttendanceDto:** Top-level response container.
+- `rows: List<MonthlyDayDto>` — daily attendance records
+- `summary: MonthlySummaryDto?` — optional server-computed totals
+
+**MonthlyDayDto:**
+- Removed: `workingHours: double` (was client convenience)
+- Added: `workMinutes: int`, `otMinutes: int` (server-native, mirrors minutes not hours)
+- Other: date, status, reason, etc.
+
+**MonthlySummaryDto (NEW):**
+- `totalDays, present, late, absent, leave: int`
+- `totalWorkMinutes, totalOtMinutes, totalLateMinutes: int`
+
+**monthlyAttendanceProvider:** `Ref, {required String month}` → returns `MonthlyAttendanceDto`.
+
+**CalendarStatsBanner (NEW):** Prefers server `summary` if present; else rolls up from `rows[]` locally (defensive).
+
+### 15. Multi-Office Check-in Resolver
+Previously, `resolveLocationCheck` only checked NEAREST office's radius. Edge case: user inside office B's radius but A is geographically closer → incorrectly reported "outside" against A.
+
+**New algorithm:** Any office where `distance ≤ office.gpsRadiusM` qualifies; if multiple match, pick closest. Falls back to nearest office (any radius) for the "outside" reference shown in WFH dialog.
+
+**Impact:** Users can now check in at N valid locations (all within ~50m of any office boundary).
+
+### 16. Locations Cache TTL Reduction
+`LocationsCacheDao.getFreshOrNull()` TTL reduced from 24h → 1h. Trade-off: 1 extra GET /locations per hour per device in exchange for admin-added offices being reachable without logout.
+
+### 17. Apple Maps Integration (iOS Only)
+New dep `apple_maps_flutter: ^1.3.0`. New widget `office_location_map.dart` renders `AppleMap` with:
+- User pin (red marker) at current GPS lat/lng
+- Office annotation + radius `Circle` (brand-tinted alpha 0.18) when office resolved
+- `myLocationEnabled: true` fallback (Apple's blue dot if custom annotation fails)
+- Dynamic camera: midpoint of user+office when within ~50° bearing; falls back to user-centred. Zoom: `log2(360 / maxDelta) - 1`, clamped 4..17.
+
+**Integration:** `LocationPreviewStep` passes user + nearest `LocationDto` coords into map. Icon placeholder visible until GPS resolves.
+
+### 18. Brand Colour Adoption Tightened
+Theme buttons now inherit brand orange (#E8642C) from `FilledButtonTheme`, `TextButtonTheme`, `FloatingActionButtonTheme`. Removed hardcoded `Colors.orange.shade700` from `location_preview_step.dart` (WFH button) and `wfh_redirect_dialog.dart` (Chấm công WFH button). Card shadow tinted brand; `scaffoldBackgroundColor` → warm beige; `dividerColor` → outlineVariant. Semantic colours retained (success SnackBar green, low-accuracy warning orange.shade50, pending-sync chip orange shades).
+
+### 19. Profile Logout Dialog Context Fix
+`ProfilePage._confirmLogout` captured outer page `BuildContext` for `Navigator.pop()`, which popped the `StatefulShellRoute`'s last page → black screen. Fixed by capturing dialog `ctx` from builder and using `Navigator.pop(ctx, ...)`. **Pattern:** Always capture dialog builder ctx; never pop with outer page ctx.
 
 ---
 

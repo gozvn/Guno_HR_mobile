@@ -107,16 +107,43 @@
 
 ### Upcoming Milestones
 
-#### Milestone 3: App Verification (CURRENT)
+#### Milestone 3: Bottom Nav Redesign + Reports/Settings (COMPLETE)
+- **Status:** ✓ COMPLETE (2026-04-24)
+- **Deliverables:**
+  - ✓ Fixed 5-slot bottom nav (Trang chủ | Đơn từ | Chấm công | Phép năm | Báo cáo)
+  - ✓ Báo cáo slot now UNIVERSAL (role-aware content: employee sees personal, manager sees personal + team)
+  - ✓ MoreSheet profile entry ALWAYS appended (both employee + manager)
+  - ✓ MoreSheet for hidden routes (Tài liệu, Cài đặt, Ca Live [if member], Hồ sơ [always])
+  - ✓ Reports landing page (role-aware: employee personal section, manager personal + team sections + pending-approvals banner)
+  - ✓ CalendarStatsBanner (4-stat header: Công/Trễ/Vắng/Phép + total hours/late minutes)
+  - ✓ Monthly attendance endpoint refactored (month="YYYY-MM", MonthlyAttendanceDto shape: rows[] + summary?)
+  - ✓ Apple Maps iOS widget (OfficeLocationMap: user pin + office circle)
+  - ✓ Multi-office check-in resolver (match-then-nearest algorithm)
+  - ✓ Locations cache TTL reduced to 1h
+  - ✓ Brand button theme (FilledButtonTheme, TextButtonTheme, FAB all orange)
+  - ✓ Profile logout dialog context fix
+  - ✓ Settings page (change password, logout, app version)
+  - ✓ Request type icons (Material Icons, no emoji fallback)
+  - ✓ Login split: attemptLogin() + completeLogin() with success banner
+  - ✓ Deprecation redirects for old paths (1-release transition)
+- **Test coverage:**
+  - ✓ 164 tests passing, 0 flaky
+  - ✓ Login banner + SnackBar flow tested
+  - ✓ Deep-link paths updated for new routes
+- **Owner:** Mobile dev + QA
+
+#### Milestone 4: App Verification (CURRENT)
 - **Status:** ✓ IN PROGRESS (2026-04-24)
 - **Criteria:**
   - ✓ App runs on iOS Simulator (iPhone 17 Pro, iOS 26.3.1)
   - ✓ Login works with real backend account
   - ✓ Dashboard renders with 3 parallel API endpoints
-  - ✓ Bottom nav persists across nested routes
+  - ✓ Fixed 5-slot bottom nav persists across nested routes
   - ✓ 164 unit/widget tests pass
   - ✓ `flutter analyze` → 0 issues
   - ✓ Firebase placeholder gating active (no crash on dev machine)
+  - ✓ New reports feature renders correctly
+  - ✓ Settings page functional (password, logout, version)
   - ⏳ Camera testing pending (physical iPhone required)
   - ⏳ GPS field testing pending (requires real location)
   - ⏳ WFH check-in requires server-side approved request (403 without)
@@ -125,10 +152,11 @@
   - Manual smoke test on simulator successful
   - Check-in flow: GPS → selfie → confirm → queue/upload
   - Manager approvals: list, detail, approve/reject buttons work
+  - Reports landing page shows pending-approvals badge
   - Push notification gating prevents Firebase crash
 - **Owner:** QA + mobile dev
 
-#### Milestone 4: Firebase Project Setup (BLOCKER)
+#### Milestone 5: Firebase Project Setup (BLOCKER)
 - **Status:** ⏳ PENDING
 - **Target:** Week 10 (2 days)
 - **Criteria:**
@@ -140,7 +168,7 @@
 - **Owner:** Firebase team + iOS lead
 - **Docs:** `docs/push-notifications-setup.md`
 
-#### Milestone 5: Xcode Signing & Provisioning (BLOCKER)
+#### Milestone 6: Xcode Signing & Provisioning (BLOCKER)
 - **Status:** ⏳ PENDING
 - **Target:** Week 10 (3 days)
 - **Criteria:**
@@ -153,7 +181,7 @@
 - **Owner:** iOS lead + Apple admin
 - **Docs:** `docs/xcode-release-config.md`
 
-#### Milestone 6: TestFlight Internal Build (BLOCKING)
+#### Milestone 7: TestFlight Internal Build (BLOCKING)
 - **Status:** ⏳ PENDING
 - **Target:** Week 11 (1 day)
 - **Criteria:**
@@ -172,7 +200,7 @@
   - Push notification tap → deep-link
   - Logout → session cleared
 
-#### Milestone 7: Backend Deliverables (PRODUCTION BLOCKER)
+#### Milestone 8: Backend Deliverables (PRODUCTION BLOCKER)
 - **Status:** ⏳ BLOCKED (backend team)
 - **Target:** Before GA (TBD)
 - **Blockers (must complete before 2026-Q2 GA):**
@@ -197,7 +225,7 @@
 - **Owner:** Backend team
 - **Docs:** `docs/backend-deliverables.md`
 
-#### Milestone 8: App Store Submission (TBD)
+#### Milestone 9: App Store Submission (TBD)
 - **Status:** ⏳ DEFERRED (waiting for backend)
 - **Target:** 1–2 weeks after backend deliverables complete
 - **Criteria:**
@@ -209,7 +237,7 @@
 - **Owner:** App Store admin + marketing
 - **Docs:** `docs/app-store-metadata.md`
 
-#### Milestone 9: GA Release (TBD)
+#### Milestone 10: GA Release (TBD)
 - **Status:** ⏳ BLOCKED (backend + App Store)
 - **Target:** 2–3 weeks after app submission
 - **Criteria:**
