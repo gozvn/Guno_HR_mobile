@@ -32,7 +32,10 @@ class AttachmentUploadResult with _$AttachmentUploadResult {
 class CreatedRequest with _$CreatedRequest {
   const factory CreatedRequest({
     required int id,
-    required String status,
+    // Server response from POST /requests is `{id, request_code, firstApproverId?}`
+    // — no status field. Default to 'pending' (the DB default for new rows).
+    @Default('pending') String status,
+    @JsonKey(name: 'request_code') String? requestCode,
     // Server sends camelCase 'firstApproverId' despite snake_case build.yaml global setting.
     @JsonKey(name: 'firstApproverId') int? firstApproverId,
   }) = _CreatedRequest;

@@ -470,9 +470,12 @@ CreatedRequest _$CreatedRequestFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$CreatedRequest {
-  int get id => throw _privateConstructorUsedError;
-  String get status =>
-      throw _privateConstructorUsedError; // Server sends camelCase 'firstApproverId' despite snake_case build.yaml global setting.
+  int get id =>
+      throw _privateConstructorUsedError; // Server response from POST /requests is `{id, request_code, firstApproverId?}`
+  // — no status field. Default to 'pending' (the DB default for new rows).
+  String get status => throw _privateConstructorUsedError;
+  @JsonKey(name: 'request_code')
+  String? get requestCode => throw _privateConstructorUsedError; // Server sends camelCase 'firstApproverId' despite snake_case build.yaml global setting.
   @JsonKey(name: 'firstApproverId')
   int? get firstApproverId => throw _privateConstructorUsedError;
 
@@ -496,6 +499,7 @@ abstract class $CreatedRequestCopyWith<$Res> {
   $Res call({
     int id,
     String status,
+    @JsonKey(name: 'request_code') String? requestCode,
     @JsonKey(name: 'firstApproverId') int? firstApproverId,
   });
 }
@@ -517,6 +521,7 @@ class _$CreatedRequestCopyWithImpl<$Res, $Val extends CreatedRequest>
   $Res call({
     Object? id = null,
     Object? status = null,
+    Object? requestCode = freezed,
     Object? firstApproverId = freezed,
   }) {
     return _then(
@@ -529,6 +534,10 @@ class _$CreatedRequestCopyWithImpl<$Res, $Val extends CreatedRequest>
                 ? _value.status
                 : status // ignore: cast_nullable_to_non_nullable
                       as String,
+            requestCode: freezed == requestCode
+                ? _value.requestCode
+                : requestCode // ignore: cast_nullable_to_non_nullable
+                      as String?,
             firstApproverId: freezed == firstApproverId
                 ? _value.firstApproverId
                 : firstApproverId // ignore: cast_nullable_to_non_nullable
@@ -551,6 +560,7 @@ abstract class _$$CreatedRequestImplCopyWith<$Res>
   $Res call({
     int id,
     String status,
+    @JsonKey(name: 'request_code') String? requestCode,
     @JsonKey(name: 'firstApproverId') int? firstApproverId,
   });
 }
@@ -571,6 +581,7 @@ class __$$CreatedRequestImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? status = null,
+    Object? requestCode = freezed,
     Object? firstApproverId = freezed,
   }) {
     return _then(
@@ -583,6 +594,10 @@ class __$$CreatedRequestImplCopyWithImpl<$Res>
             ? _value.status
             : status // ignore: cast_nullable_to_non_nullable
                   as String,
+        requestCode: freezed == requestCode
+            ? _value.requestCode
+            : requestCode // ignore: cast_nullable_to_non_nullable
+                  as String?,
         firstApproverId: freezed == firstApproverId
             ? _value.firstApproverId
             : firstApproverId // ignore: cast_nullable_to_non_nullable
@@ -597,7 +612,8 @@ class __$$CreatedRequestImplCopyWithImpl<$Res>
 class _$CreatedRequestImpl implements _CreatedRequest {
   const _$CreatedRequestImpl({
     required this.id,
-    required this.status,
+    this.status = 'pending',
+    @JsonKey(name: 'request_code') this.requestCode,
     @JsonKey(name: 'firstApproverId') this.firstApproverId,
   });
 
@@ -606,8 +622,14 @@ class _$CreatedRequestImpl implements _CreatedRequest {
 
   @override
   final int id;
+  // Server response from POST /requests is `{id, request_code, firstApproverId?}`
+  // — no status field. Default to 'pending' (the DB default for new rows).
   @override
+  @JsonKey()
   final String status;
+  @override
+  @JsonKey(name: 'request_code')
+  final String? requestCode;
   // Server sends camelCase 'firstApproverId' despite snake_case build.yaml global setting.
   @override
   @JsonKey(name: 'firstApproverId')
@@ -615,7 +637,7 @@ class _$CreatedRequestImpl implements _CreatedRequest {
 
   @override
   String toString() {
-    return 'CreatedRequest(id: $id, status: $status, firstApproverId: $firstApproverId)';
+    return 'CreatedRequest(id: $id, status: $status, requestCode: $requestCode, firstApproverId: $firstApproverId)';
   }
 
   @override
@@ -625,13 +647,16 @@ class _$CreatedRequestImpl implements _CreatedRequest {
             other is _$CreatedRequestImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.status, status) || other.status == status) &&
+            (identical(other.requestCode, requestCode) ||
+                other.requestCode == requestCode) &&
             (identical(other.firstApproverId, firstApproverId) ||
                 other.firstApproverId == firstApproverId));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, status, firstApproverId);
+  int get hashCode =>
+      Object.hash(runtimeType, id, status, requestCode, firstApproverId);
 
   /// Create a copy of CreatedRequest
   /// with the given fields replaced by the non-null parameter values.
@@ -653,7 +678,8 @@ class _$CreatedRequestImpl implements _CreatedRequest {
 abstract class _CreatedRequest implements CreatedRequest {
   const factory _CreatedRequest({
     required final int id,
-    required final String status,
+    final String status,
+    @JsonKey(name: 'request_code') final String? requestCode,
     @JsonKey(name: 'firstApproverId') final int? firstApproverId,
   }) = _$CreatedRequestImpl;
 
@@ -661,9 +687,13 @@ abstract class _CreatedRequest implements CreatedRequest {
       _$CreatedRequestImpl.fromJson;
 
   @override
-  int get id;
+  int get id; // Server response from POST /requests is `{id, request_code, firstApproverId?}`
+  // — no status field. Default to 'pending' (the DB default for new rows).
   @override
-  String get status; // Server sends camelCase 'firstApproverId' despite snake_case build.yaml global setting.
+  String get status;
+  @override
+  @JsonKey(name: 'request_code')
+  String? get requestCode; // Server sends camelCase 'firstApproverId' despite snake_case build.yaml global setting.
   @override
   @JsonKey(name: 'firstApproverId')
   int? get firstApproverId;

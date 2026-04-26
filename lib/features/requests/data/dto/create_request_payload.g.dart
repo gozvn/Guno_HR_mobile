@@ -44,7 +44,8 @@ Map<String, dynamic> _$$AttachmentUploadResultImplToJson(
 _$CreatedRequestImpl _$$CreatedRequestImplFromJson(Map<String, dynamic> json) =>
     _$CreatedRequestImpl(
       id: (json['id'] as num).toInt(),
-      status: json['status'] as String,
+      status: json['status'] as String? ?? 'pending',
+      requestCode: json['request_code'] as String?,
       firstApproverId: (json['firstApproverId'] as num?)?.toInt(),
     );
 
@@ -53,5 +54,6 @@ Map<String, dynamic> _$$CreatedRequestImplToJson(
 ) => <String, dynamic>{
   'id': instance.id,
   'status': instance.status,
+  if (instance.requestCode case final value?) 'request_code': value,
   if (instance.firstApproverId case final value?) 'firstApproverId': value,
 };
