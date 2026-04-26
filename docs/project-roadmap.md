@@ -203,6 +203,7 @@
 #### Milestone 8: Backend Deliverables (PRODUCTION BLOCKER)
 - **Status:** ⏳ BLOCKED (backend team)
 - **Target:** Before GA (TBD)
+- **Status Update (2026-04-24):** `requests.deduct_leave` migration (v15) completed; POST /requests + /reports/leave-balance + /reports/requests no longer 500. Unblocks Bảng lương/Báo cáo flows.
 - **Blockers (must complete before 2026-Q2 GA):**
   1. **POST `/api/hr/auth/refresh`** — Refresh token endpoint
      - Impact: 8h JWT expiry forces daily re-login without refresh

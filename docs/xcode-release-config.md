@@ -103,6 +103,8 @@ Verify these are present in `ios/Runner/Info.plist`:
 # Product → Archive → Distribute App → App Store Connect → Upload
 ```
 
+**For developer debug on physical iPhone (free Apple ID):** See `docs/release-checklist.md` → Appendix: Real-Device Debug Install. No archive/distribution needed; use `flutter run -d <udid> --release` for fast iteration.
+
 ## 10. APNs Configuration
 
 1. Apple Developer Portal → Certificates, Identifiers & Profiles → **Keys**

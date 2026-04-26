@@ -661,6 +661,11 @@ Theme buttons now inherit brand orange (#E8642C) from `FilledButtonTheme`, `Text
 ### 19. Profile Logout Dialog Context Fix
 `ProfilePage._confirmLogout` captured outer page `BuildContext` for `Navigator.pop()`, which popped the `StatefulShellRoute`'s last page → black screen. Fixed by capturing dialog `ctx` from builder and using `Navigator.pop(ctx, ...)`. **Pattern:** Always capture dialog builder ctx; never pop with outer page ctx.
 
+### 20. CreatedRequest DTO Server Contract Mismatch Fix
+`POST /api/hr/requests` response from server omits `status` field, returning only `{id, request_code, firstApproverId?}`. Old DTO required `status: String`, causing `type 'Null' is not a subtype of type 'String'` parse error. Fixed: `@Default('pending') String status` (matches DB default for new rows), `@JsonKey(name: 'request_code') String? requestCode` (camelCase-to-snake auto-fail worked for most fields, but `request_code` wasn't handled). Also added `@JsonKey(name: 'firstApproverId')` to handle server's camelCase override of global build.yaml snake_case setting.
+
+**Lesson:** Server response shapes != request shapes. Trust actual API contract; default missing required fields to server's documented defaults.
+
 ---
 
 ## Unresolved Questions

@@ -72,3 +72,37 @@ Pre-release verification steps. Complete all items before each TestFlight or App
 | Lead Developer | | | |
 | QA | | | |
 | Product Manager | | | |
+
+---
+
+## Appendix: Real-Device Debug Install (Free Apple ID)
+
+For developer testing on physical iPhone without paid Apple Developer account:
+
+**Prerequisites:**
+- Mac with Xcode installed
+- iPhone with Developer Mode enabled (Settings → Privacy & Security → Developer Mode)
+- Free Apple ID signed in Xcode (Xcode → Settings → Accounts)
+- Trust developer cert: iPhone → Settings → VPN & Device Management → select cert → Trust
+
+**Install via USB:**
+```bash
+# Get device UDID
+xcrun xcode-select --print-path  # Verify Xcode
+flutter devices  # List connected devices
+UDID="<from above>"
+
+# Run in release (faster iteration):
+flutter run -d "$UDID" --release --dart-define=API_BASE=http://<mac-ip>:3000
+
+# Or debug:
+flutter run -d "$UDID" --dart-define=API_BASE=http://<mac-ip>:3000
+```
+
+**LAN Backend Access:**
+- Mac + iPhone on same WiFi
+- Get Mac LAN IP: `ifconfig | grep "inet 192"`
+- Use `http://192.168.x.x:3000` in API_BASE (not localhost)
+- Disable Mac firewall OR allow port 3000: System Settings → Firewall Options
+
+**Note:** Free Apple ID certificate expires after 7 days; renew via Xcode Accounts panel.

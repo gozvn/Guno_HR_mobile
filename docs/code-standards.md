@@ -777,6 +777,21 @@ showDialog(
 
 ---
 
+## API Contract Pitfalls
+
+### Trust Actual Response Shape, Not Assumed Request Shape
+Server POST/PATCH response DTOs often differ from request payloads. Example: `POST /api/hr/requests` returns `{id, request_code, firstApproverId?}` (no `status`), but request sends `{type, startDate, endDate, reason?, attachmentUrls}`. DTOs for responses must account for:
+- Missing fields: default to server-documented defaults (e.g., `@Default('pending')`)
+- Renamed fields: use `@JsonKey(name: '...')` explicitly, even if global `build.yaml` has snake_case config (server may override on specific fields)
+- Type mismatches: handle SQLite int→bool (see SQLite Bool-as-Int pattern)
+
+**Don't assume:** If field not in request, it won't appear in response (false). Always verify actual response via API docs or test response capture.
+
+### Field Naming Consistency Across Request/Response
+When global `field_rename: snake` applies in `build.yaml`, server may still override per-field via camelCase in JSON. Use `@JsonKey(name: 'fieldName')` on response DTOs if server API docs specify camelCase (e.g., `firstApproverId`).
+
+---
+
 ## Unresolved
 
 - Concurrent requests (no race detection; Riverpod handles sequencing)
