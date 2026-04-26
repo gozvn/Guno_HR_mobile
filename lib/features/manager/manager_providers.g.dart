@@ -270,7 +270,7 @@ class _PendingApprovalsProviderElement
   String? get typeFilter => (origin as PendingApprovalsProvider).typeFilter;
 }
 
-String _$pendingCountHash() => r'30fc53bb20e09af7afba04e20d76eb2f6860bbea';
+String _$pendingCountHash() => r'48efe6a6f31645feed6ac2bb31e83040925b64b0';
 
 /// See also [pendingCount].
 @ProviderFor(pendingCount)
