@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Cleartext HTTP CHỈ cho dev hosts:
+  - 10.0.3.2: Genymotion alias trỏ về Mac localhost
+  - 10.0.2.2: Android Studio AVD alias
+  - localhost: trường hợp chạy Android trên máy cùng Mac
+  Production traffic (api.guop.app) dùng HTTPS qua base-config (default secure).
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">10.0.3.2</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+    </domain-config>
+</network-security-config>
