@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'dart:math' as math;
 
 import 'package:apple_maps_flutter/apple_maps_flutter.dart';
@@ -7,9 +8,23 @@ import '../../data/dto/location_dto.dart';
 
 double _log2(double x) => math.log(x) / math.ln2;
 
-/// Compact native iOS map showing the user's GPS pin together with the
-/// nearest office (centre + radius circle). Read-only — the wizard's "Cập
-/// nhật vị trí" button drives the underlying refresh.
+/// Haversine distance (m) — chỉ dùng cho fallback Android show text.
+double _haversineM(double lat1, double lng1, double lat2, double lng2) {
+  const r = 6371000.0;
+  final dLat = (lat2 - lat1) * math.pi / 180;
+  final dLng = (lng2 - lng1) * math.pi / 180;
+  final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+      math.cos(lat1 * math.pi / 180) *
+          math.cos(lat2 * math.pi / 180) *
+          math.sin(dLng / 2) *
+          math.sin(dLng / 2);
+  return 2 * r * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+}
+
+/// Compact map showing the user's GPS pin together with the nearest office
+/// (centre + radius circle). iOS dùng AppleMap native; Android tạm fallback
+/// text (apple_maps_flutter iOS-only — Phase 03 có thể swap sang
+/// google_maps_flutter / flutter_map để đồng bộ visual).
 class OfficeLocationMap extends StatelessWidget {
   const OfficeLocationMap({
     super.key,
@@ -29,6 +44,16 @@ class OfficeLocationMap extends StatelessWidget {
     // ignore: avoid_print
     print('[DBG OfficeMap] user=($userLat,$userLng) '
         'office=${office?.name}@(${office?.gpsLat},${office?.gpsLng})');
+
+    if (!Platform.isIOS) {
+      return _AndroidFallback(
+        userLat: userLat,
+        userLng: userLng,
+        office: office,
+        height: height,
+      );
+    }
+
     final user = LatLng(userLat, userLng);
     final hasOffice = office?.gpsLat != null && office?.gpsLng != null;
     final officeLatLng = hasOffice
@@ -115,6 +140,91 @@ class OfficeLocationMap extends StatelessWidget {
               ),
           },
         ),
+      ),
+    );
+  }
+}
+
+/// Android fallback: card text showing user GPS + distance to office.
+/// Không có map graphic — Phase 03 có thể swap sang google_maps_flutter.
+class _AndroidFallback extends StatelessWidget {
+  const _AndroidFallback({
+    required this.userLat,
+    required this.userLng,
+    required this.office,
+    required this.height,
+  });
+
+  final double userLat;
+  final double userLng;
+  final LocationDto? office;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final hasOffice = office?.gpsLat != null && office?.gpsLng != null;
+    final distanceM = hasOffice
+        ? _haversineM(userLat, userLng, office!.gpsLat!, office!.gpsLng!)
+        : null;
+    final radiusM = (office?.gpsRadiusM ?? 100).toDouble();
+    final inside = distanceM != null && distanceM <= radiusM;
+
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: cs.outlineVariant),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.my_location, size: 18, color: cs.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Vị trí của bạn',
+                  style: tt.labelLarge,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${userLat.toStringAsFixed(6)}, ${userLng.toStringAsFixed(6)}',
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+          if (hasOffice) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(Icons.business, size: 18, color: cs.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    office?.name ?? 'Văn phòng',
+                    style: tt.labelLarge,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Cách ${distanceM!.toStringAsFixed(0)}m '
+              '(bán kính cho phép ${radiusM.toStringAsFixed(0)}m)',
+              style: tt.bodySmall?.copyWith(
+                color: inside ? Colors.green.shade700 : cs.error,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
