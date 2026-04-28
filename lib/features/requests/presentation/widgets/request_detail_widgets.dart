@@ -8,7 +8,7 @@ import '../image_viewer_page.dart';
 import 'authenticated_image.dart';
 import 'status_chip.dart';
 
-/// Header card showing type icon, name, status chip, and date range.
+/// Header card showing type icon, name, status chip, date range, creator info.
 class RequestDetailHeader extends StatelessWidget {
   const RequestDetailHeader({super.key, required this.detail});
 
@@ -17,6 +17,7 @@ class RequestDetailHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -30,13 +31,10 @@ class RequestDetailHeader extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text(detail.typeIcon ?? '📋',
-                    style: const TextStyle(fontSize: 28)),
-                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     detail.typeName ?? detail.type,
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: tt.titleMedium,
                   ),
                 ),
                 StatusChip(status: detail.status),
@@ -45,13 +43,103 @@ class RequestDetailHeader extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                const Icon(Icons.calendar_today_outlined, size: 16),
+                Icon(Icons.calendar_today_outlined,
+                    size: 16, color: cs.onSurfaceVariant),
                 const SizedBox(width: 6),
                 Text('${detail.startDate} → ${detail.endDate}'),
               ],
             ),
+            if (detail.fullName != null || detail.createdAt.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Divider(height: 1, color: cs.outlineVariant),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _CreatorAvatar(
+                    name: detail.fullName,
+                    avatarUrl: detail.avatarUrl,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          detail.fullName ?? 'Không rõ',
+                          style: tt.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        if (detail.departmentName != null)
+                          Text(
+                            detail.departmentName!,
+                            style: tt.bodySmall
+                                ?.copyWith(color: cs.onSurfaceVariant),
+                          ),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Icon(Icons.schedule,
+                          size: 14, color: cs.onSurfaceVariant),
+                      const SizedBox(width: 4),
+                      Text(
+                        _fmtDateTime(detail.createdAt),
+                        style: tt.bodySmall
+                            ?.copyWith(color: cs.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
+      ),
+    );
+  }
+
+  String _fmtDateTime(String iso) {
+    try {
+      final dt = DateTime.parse(iso).toLocal();
+      return '${dt.day.toString().padLeft(2, '0')}/'
+          '${dt.month.toString().padLeft(2, '0')}/'
+          '${dt.year} '
+          '${dt.hour.toString().padLeft(2, '0')}:'
+          '${dt.minute.toString().padLeft(2, '0')}';
+    } catch (_) {
+      return iso;
+    }
+  }
+}
+
+class _CreatorAvatar extends StatelessWidget {
+  const _CreatorAvatar({required this.name, required this.avatarUrl});
+
+  final String? name;
+  final String? avatarUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final initial = (name?.trim().isNotEmpty ?? false)
+        ? name!.trim().substring(0, 1).toUpperCase()
+        : '?';
+    final fallback = CircleAvatar(
+      radius: 18,
+      backgroundColor: cs.primaryContainer,
+      child: Text(initial,
+          style: TextStyle(
+            color: cs.onPrimaryContainer,
+            fontWeight: FontWeight.w600,
+          )),
+    );
+    if (avatarUrl == null || avatarUrl!.isEmpty) return fallback;
+    return ClipOval(
+      child: AuthenticatedImage(
+        url: avatarUrl!,
+        width: 36,
+        height: 36,
       ),
     );
   }

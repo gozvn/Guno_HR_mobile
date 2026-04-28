@@ -19,6 +19,10 @@ class RequestDetailDto with _$RequestDetailDto {
     required String createdAt,
     String? typeName,
     String? typeIcon,
+    String? fullName,
+    String? empCode,
+    String? avatarUrl,
+    String? departmentName,
     @Default([]) List<ApprovalStepDto> approvals,
     @Default([]) List<AttachmentDto> attachments,
   }) = _RequestDetailDto;

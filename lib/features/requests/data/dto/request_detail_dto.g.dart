@@ -19,6 +19,10 @@ _$RequestDetailDtoImpl _$$RequestDetailDtoImplFromJson(
   createdAt: json['created_at'] as String,
   typeName: json['type_name'] as String?,
   typeIcon: json['type_icon'] as String?,
+  fullName: json['full_name'] as String?,
+  empCode: json['emp_code'] as String?,
+  avatarUrl: json['avatar_url'] as String?,
+  departmentName: json['department_name'] as String?,
   approvals:
       (json['approvals'] as List<dynamic>?)
           ?.map((e) => ApprovalStepDto.fromJson(e as Map<String, dynamic>))
@@ -44,6 +48,10 @@ Map<String, dynamic> _$$RequestDetailDtoImplToJson(
   'created_at': instance.createdAt,
   if (instance.typeName case final value?) 'type_name': value,
   if (instance.typeIcon case final value?) 'type_icon': value,
+  if (instance.fullName case final value?) 'full_name': value,
+  if (instance.empCode case final value?) 'emp_code': value,
+  if (instance.avatarUrl case final value?) 'avatar_url': value,
+  if (instance.departmentName case final value?) 'department_name': value,
   'approvals': instance.approvals.map((e) => e.toJson()).toList(),
   'attachments': instance.attachments.map((e) => e.toJson()).toList(),
 };

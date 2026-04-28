@@ -31,6 +31,10 @@ mixin _$RequestDetailDto {
   String get createdAt => throw _privateConstructorUsedError;
   String? get typeName => throw _privateConstructorUsedError;
   String? get typeIcon => throw _privateConstructorUsedError;
+  String? get fullName => throw _privateConstructorUsedError;
+  String? get empCode => throw _privateConstructorUsedError;
+  String? get avatarUrl => throw _privateConstructorUsedError;
+  String? get departmentName => throw _privateConstructorUsedError;
   List<ApprovalStepDto> get approvals => throw _privateConstructorUsedError;
   List<AttachmentDto> get attachments => throw _privateConstructorUsedError;
 
@@ -62,6 +66,10 @@ abstract class $RequestDetailDtoCopyWith<$Res> {
     String createdAt,
     String? typeName,
     String? typeIcon,
+    String? fullName,
+    String? empCode,
+    String? avatarUrl,
+    String? departmentName,
     List<ApprovalStepDto> approvals,
     List<AttachmentDto> attachments,
   });
@@ -92,6 +100,10 @@ class _$RequestDetailDtoCopyWithImpl<$Res, $Val extends RequestDetailDto>
     Object? createdAt = null,
     Object? typeName = freezed,
     Object? typeIcon = freezed,
+    Object? fullName = freezed,
+    Object? empCode = freezed,
+    Object? avatarUrl = freezed,
+    Object? departmentName = freezed,
     Object? approvals = null,
     Object? attachments = null,
   }) {
@@ -137,6 +149,22 @@ class _$RequestDetailDtoCopyWithImpl<$Res, $Val extends RequestDetailDto>
                 ? _value.typeIcon
                 : typeIcon // ignore: cast_nullable_to_non_nullable
                       as String?,
+            fullName: freezed == fullName
+                ? _value.fullName
+                : fullName // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            empCode: freezed == empCode
+                ? _value.empCode
+                : empCode // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            avatarUrl: freezed == avatarUrl
+                ? _value.avatarUrl
+                : avatarUrl // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            departmentName: freezed == departmentName
+                ? _value.departmentName
+                : departmentName // ignore: cast_nullable_to_non_nullable
+                      as String?,
             approvals: null == approvals
                 ? _value.approvals
                 : approvals // ignore: cast_nullable_to_non_nullable
@@ -171,6 +199,10 @@ abstract class _$$RequestDetailDtoImplCopyWith<$Res>
     String createdAt,
     String? typeName,
     String? typeIcon,
+    String? fullName,
+    String? empCode,
+    String? avatarUrl,
+    String? departmentName,
     List<ApprovalStepDto> approvals,
     List<AttachmentDto> attachments,
   });
@@ -200,6 +232,10 @@ class __$$RequestDetailDtoImplCopyWithImpl<$Res>
     Object? createdAt = null,
     Object? typeName = freezed,
     Object? typeIcon = freezed,
+    Object? fullName = freezed,
+    Object? empCode = freezed,
+    Object? avatarUrl = freezed,
+    Object? departmentName = freezed,
     Object? approvals = null,
     Object? attachments = null,
   }) {
@@ -245,6 +281,22 @@ class __$$RequestDetailDtoImplCopyWithImpl<$Res>
             ? _value.typeIcon
             : typeIcon // ignore: cast_nullable_to_non_nullable
                   as String?,
+        fullName: freezed == fullName
+            ? _value.fullName
+            : fullName // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        empCode: freezed == empCode
+            ? _value.empCode
+            : empCode // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        avatarUrl: freezed == avatarUrl
+            ? _value.avatarUrl
+            : avatarUrl // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        departmentName: freezed == departmentName
+            ? _value.departmentName
+            : departmentName // ignore: cast_nullable_to_non_nullable
+                  as String?,
         approvals: null == approvals
             ? _value._approvals
             : approvals // ignore: cast_nullable_to_non_nullable
@@ -272,6 +324,10 @@ class _$RequestDetailDtoImpl implements _RequestDetailDto {
     required this.createdAt,
     this.typeName,
     this.typeIcon,
+    this.fullName,
+    this.empCode,
+    this.avatarUrl,
+    this.departmentName,
     final List<ApprovalStepDto> approvals = const [],
     final List<AttachmentDto> attachments = const [],
   }) : _approvals = approvals,
@@ -300,6 +356,14 @@ class _$RequestDetailDtoImpl implements _RequestDetailDto {
   final String? typeName;
   @override
   final String? typeIcon;
+  @override
+  final String? fullName;
+  @override
+  final String? empCode;
+  @override
+  final String? avatarUrl;
+  @override
+  final String? departmentName;
   final List<ApprovalStepDto> _approvals;
   @override
   @JsonKey()
@@ -320,7 +384,7 @@ class _$RequestDetailDtoImpl implements _RequestDetailDto {
 
   @override
   String toString() {
-    return 'RequestDetailDto(id: $id, employeeId: $employeeId, type: $type, status: $status, startDate: $startDate, endDate: $endDate, reason: $reason, createdAt: $createdAt, typeName: $typeName, typeIcon: $typeIcon, approvals: $approvals, attachments: $attachments)';
+    return 'RequestDetailDto(id: $id, employeeId: $employeeId, type: $type, status: $status, startDate: $startDate, endDate: $endDate, reason: $reason, createdAt: $createdAt, typeName: $typeName, typeIcon: $typeIcon, fullName: $fullName, empCode: $empCode, avatarUrl: $avatarUrl, departmentName: $departmentName, approvals: $approvals, attachments: $attachments)';
   }
 
   @override
@@ -343,6 +407,13 @@ class _$RequestDetailDtoImpl implements _RequestDetailDto {
                 other.typeName == typeName) &&
             (identical(other.typeIcon, typeIcon) ||
                 other.typeIcon == typeIcon) &&
+            (identical(other.fullName, fullName) ||
+                other.fullName == fullName) &&
+            (identical(other.empCode, empCode) || other.empCode == empCode) &&
+            (identical(other.avatarUrl, avatarUrl) ||
+                other.avatarUrl == avatarUrl) &&
+            (identical(other.departmentName, departmentName) ||
+                other.departmentName == departmentName) &&
             const DeepCollectionEquality().equals(
               other._approvals,
               _approvals,
@@ -367,6 +438,10 @@ class _$RequestDetailDtoImpl implements _RequestDetailDto {
     createdAt,
     typeName,
     typeIcon,
+    fullName,
+    empCode,
+    avatarUrl,
+    departmentName,
     const DeepCollectionEquality().hash(_approvals),
     const DeepCollectionEquality().hash(_attachments),
   );
@@ -400,6 +475,10 @@ abstract class _RequestDetailDto implements RequestDetailDto {
     required final String createdAt,
     final String? typeName,
     final String? typeIcon,
+    final String? fullName,
+    final String? empCode,
+    final String? avatarUrl,
+    final String? departmentName,
     final List<ApprovalStepDto> approvals,
     final List<AttachmentDto> attachments,
   }) = _$RequestDetailDtoImpl;
@@ -427,6 +506,14 @@ abstract class _RequestDetailDto implements RequestDetailDto {
   String? get typeName;
   @override
   String? get typeIcon;
+  @override
+  String? get fullName;
+  @override
+  String? get empCode;
+  @override
+  String? get avatarUrl;
+  @override
+  String? get departmentName;
   @override
   List<ApprovalStepDto> get approvals;
   @override
