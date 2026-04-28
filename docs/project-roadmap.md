@@ -1,13 +1,14 @@
 # Project Roadmap — GU HR Mobile
 
-**Status:** Code Complete (R1 + R2), Simulator Testing Active, Pending Firebase + Apple Signing  
-**Last Updated:** 2026-04-24  
-**Timeline:** 8 weeks elapsed (phases 1–8), 2–4 weeks remaining (Firebase + signing + TestFlight + backend deliverables)
+**Status:** Code Complete (R1 + R2), Simulator + Emulator Testing Active, Android Release-Ready  
+**Last Updated:** 2026-04-28  
+**Timeline:** 8 weeks elapsed (phases 1–8 on iOS), Android Phase 01–03 completed (2026-04-27 to 2026-04-28), 2–4 weeks remaining (Firebase + iOS signing + Play Console beta + backend deliverables)
 
 **Current Blockers:**
-1. **Firebase project setup** — real `google-services.json` + `flutterfire configure` (blocks push testing)
-2. **Xcode signing** — Apple Team ID + provisioning profile (blocks TestFlight build)
-3. **Backend endpoints** — refresh token, register-device, rate limiting (blocks production GA)
+1. **Firebase project setup** — real `google-services.json` + `flutterfire configure` for both platforms (blocks push testing)
+2. **iOS:** Xcode signing — Apple Team ID + provisioning profile (blocks TestFlight build)
+3. **Android:** Play Console setup — AAB upload + internal testing track (blocks Play Store beta)
+4. **Backend endpoints** — refresh token, register-device, rate limiting (blocks production GA)
 
 ---
 
@@ -56,6 +57,32 @@
 
 **Dependencies to unblock TestFlight:**
 - Same as R1 (Firebase, Apple, signing)
+
+### Android Port (NEW — 2026-04-27 to 2026-04-28)
+**Status:** Code-Complete R1 + R2, APK release-ready, Play Console deferred  
+**Features:**
+- ✓ Android scaffold + Gradle configuration (minSdk 24, targetSdk 34, compileSdk 36)
+- ✓ Core library desugaring + multiDexEnabled for API <26 compatibility
+- ✓ Network security config (cleartext whitelist for dev hosts)
+- ✓ Permissions declared: INTERNET, LOCATION, CAMERA, MEDIA, BIOMETRIC
+- ✓ Env-aware default backend: `http://10.0.3.2:3000` (Genymotion) / `http://10.0.2.2:3000` (AVD)
+- ✓ Haversine text fallback for maps (iOS-only apple_maps_flutter gated)
+- ✓ APK release builds tested on Genymotion (arm64-v8a API 30)
+- ✓ All 164 tests passing on Android
+- ✓ Smoke test: login, dashboard, check-in, approval flow all working
+
+**Metrics:**
+- APK split-per-abi: armeabi-v7a 23.9MB, arm64-v8a 25.8MB, x86_64 27.2MB
+- Network latency same as iOS (Hà Nội office distance calc correct)
+- Zero new test failures
+
+**Next steps (Phase R3):**
+- [ ] Firebase real config (`google-services.json` from flutterfire configure)
+- [ ] Play Console internal testing track + AAB upload
+- [ ] Maps visual parity: google_maps_flutter or flutter_map (deferred)
+- [ ] Google Play Store beta submission
+
+**Decision rationale:** Cross-platform Flutter support reduces maintenance burden; single codebase serves both platforms; Android native plugins (camera, geolocator, secure_storage) work identically on both.
 
 ### R3: Admin/Reports (OUT OF SCOPE)
 **Decision:** Remains on desktop `hr-web`  

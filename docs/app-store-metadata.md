@@ -1,6 +1,8 @@
 # App Store Metadata — GU HR Mobile
 
-Template for App Store Connect submission. Fill in all fields before first submission.
+Metadata for iOS App Store Connect and Android Google Play Console. Fill in all fields before submission to each platform.
+
+**Status:** iOS TestFlight-ready; Android Play Console beta-ready (deferred to Phase R3)
 
 ## Basic Info
 
@@ -116,8 +118,26 @@ Notes for reviewer:
 - The app is designed for Vietnamese enterprise HR workflows; UI is in Vietnamese.
 ```
 
+## Release Strategy
+
+### iOS: App Store Connect
+- **Timeline:** Week 11–12 (TBD)
+- **Prerequisites:** Firebase real config, Apple signing, TestFlight validation
+- **Submission path:** Internal TestFlight → External Beta (optional) → Production
+- **Review time:** 1–3 days (Apple review)
+
+### Android: Google Play Console (Deferred to Phase R3)
+- **Timeline:** Week 12–13 (after iOS validation)
+- **Prerequisites:** Firebase real config, Play Store upload key, Play Console app record
+- **Submission path:** Internal Testing (3+ days) → Closed Beta → Production
+- **Review time:** 24–48 hours (Google review)
+
+**Note:** Both platforms use identical codebase (Flutter); separate app records required for iOS App Store ID + Android Package Name.
+
+---
+
 ## Version History Template
 
-| Version | Build | What's New (VN) |
-|---------|-------|-----------------|
-| 1.0.0 | 1 | Ra mắt phiên bản đầu tiên: chấm công, đơn từ, phê duyệt |
+| Version | Build | Platform | What's New (VN) |
+|---------|-------|----------|-----------------|
+| 1.0.0 | 1 | iOS + Android | Ra mắt phiên bản đầu tiên: chấm công, đơn từ, phê duyệt, live team, live shifts (R1 + R2 features) |

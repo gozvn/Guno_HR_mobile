@@ -1,6 +1,8 @@
 # Release Checklist — GU HR Mobile
 
-Pre-release verification steps. Complete all items before each TestFlight or App Store submission.
+Pre-release verification steps. Complete all items before each TestFlight (iOS), Play testing (Android), or public App Store/Play Store submission.
+
+**Note:** iOS and Android builds can proceed in parallel; both share the same Dart/Flutter codebase. Separate the platform-specific checklists below.
 
 ## Backend Blockers (must be resolved by backend team)
 
@@ -14,22 +16,40 @@ Pre-release verification steps. Complete all items before each TestFlight or App
 - [ ] GPS radius threshold documented for each office location
 - [ ] `attachment_urls` array format for POST /requests confirmed
 
-## Code Quality
+## Android Build
+
+- [ ] Bundle ID confirmed: `app.guop.guHrMobile` (match in `android/app/build.gradle.kts` + Firebase console)
+- [ ] `android/app/src/main/AndroidManifest.xml` permissions: INTERNET, LOCATION, CAMERA, MEDIA, BIOMETRIC ✓
+- [ ] `android/app/src/main/res/xml/network_security_config.xml` cleartext hosts limited to dev only ✓
+- [ ] App Icon generated via `flutter_launcher_icons` from `assets/icon/app_icon_1024.png` (5 mipmap densities) ✓
+- [ ] Splash screen generated via `flutter_native_splash` ✓
+- [ ] Build modes tested:
+  - [ ] Debug: `flutter run -d emulator` (Genymotion Pixel API 30 arm64-v8a)
+  - [ ] Release (split-per-abi APK): `flutter build apk --release --split-per-abi`
+  - [ ] Release (universal APK, if needed): `flutter build apk --release`
+  - [ ] Release (AAB for Play Store): `flutter build appbundle --release`
+- [ ] Physical device test (if available): Install APK via adb → smoke test login, check-in, approve
+- [ ] Network config: Dev build uses `http://10.0.3.2:3000` (Genymotion) or `http://10.0.2.2:3000` (AVD)
+- [ ] Signing: Debug keystore auto-signed; production build requires Play Store upload key (defer to Play Console)
+
+## Shared Build Steps (iOS + Android)
 
 - [ ] `flutter analyze` → 0 issues
 - [ ] `flutter test` → all tests pass
 - [ ] `dart run build_runner build --delete-conflicting-outputs` → no conflicts
 - [ ] No hardcoded credentials, API keys, or secrets in source
+- [ ] Version + build number bumped in `pubspec.yaml`
+- [ ] Test on simulator/emulator: login → dashboard → check-in → approve request (manager)
 
 ## iOS Build
 
 - [ ] Bundle ID confirmed: `app.guop.guHrMobile` (match across Xcode + Firebase + provisioning profile)
-- [ ] Version + build number bumped (`./release/scripts/bump_version.sh`)
-- [ ] `release/ExportOptions.plist` configured with correct Team ID
-- [ ] Signing: Automatic signing enabled in Xcode with correct team
+- [ ] `ios/Runner.xcodeproj` signing: Automatic signing enabled in Xcode with correct team
 - [ ] Capabilities: Push Notifications ✓ / Background Modes (remote-notification) ✓ / Keychain ✓
-- [ ] App Icon 1024×1024 PNG (no alpha) uploaded in Runner/Assets.xcassets/AppIcon
+- [ ] App Icon 1024×1024 PNG (no alpha) uploaded in ios/Runner/Assets.xcassets/AppIcon
 - [ ] Launch Screen storyboard renders correctly on iPhone 14 Pro + 15 Pro simulator
+- [ ] Build command: `flutter build ios --release --no-codesign` (or use Xcode UI for full signing)
+- [ ] Physical device test: Plug iPhone via USB → `flutter run -d <UDID> --release`
 
 ## Firebase
 
@@ -40,14 +60,16 @@ Pre-release verification steps. Complete all items before each TestFlight or App
 
 ## End-to-End Smoke Test (Release build on physical device)
 
-- [ ] Login with employee account → dashboard loads
-- [ ] Check-in flow: GPS acquired → selfie taken → confirm → success banner
-- [ ] Create leave request → status shows "pending"
-- [ ] Manager: approve a request → status updates
-- [ ] Push notification received → tap → navigates to correct screen
-- [ ] Logout → session cleared → login page shown
+- [ ] **Both platforms:** Login with employee account → dashboard loads
+- [ ] **Both platforms:** Check-in flow: GPS acquired → selfie taken → confirm → success banner
+  - iOS: Apple Maps shows office + user pin + radius circle
+  - Android: Haversine text card shows office name, distance, allowed radius
+- [ ] **Both platforms:** Create leave request → status shows "pending"
+- [ ] **Both platforms (manager):** Approve a request → status updates to "approved"
+- [ ] **Both platforms:** Push notification received → tap → navigates to correct screen
+- [ ] **Both platforms:** Logout → session cleared → login page shown
 
-## App Store Connect
+## iOS: App Store Connect
 
 - [ ] App record created in App Store Connect
 - [ ] Privacy policy URL live (e.g. `https://guop.app/privacy`)
@@ -57,6 +79,20 @@ Pre-release verification steps. Complete all items before each TestFlight or App
 - [ ] Screenshots uploaded: 6.7" (1290×2796) + 6.5" (1284×2778), min 3 each
 - [ ] Demo account credentials entered in Review Notes
 - [ ] Build uploaded to TestFlight + processing complete
+
+## Android: Google Play Console
+
+- [ ] App record created in Play Console
+- [ ] Privacy policy URL live (same as iOS)
+- [ ] Support URL live (same as iOS)
+- [ ] App access declaration (location, camera, media, biometric) ✓
+- [ ] Sensitive permission justification (location + camera for HR use case)
+- [ ] Screenshots uploaded: phone (1080×1920 or 1440×2560), min 3 each; tablet optional
+- [ ] Demo account credentials entered in Review Notes (same as iOS)
+- [ ] Release notes in Vietnamese
+- [ ] Internal testing track: Upload AAB → test group (GU HR team) → proceed to closed beta
+- [ ] Closed beta testing complete (5+ users, >3 days) before moving to production
+- [ ] AAB signed by Play Upload Key (generated by Play Console)
 
 ## Internal UAT (before External TestFlight)
 

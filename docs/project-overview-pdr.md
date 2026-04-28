@@ -1,10 +1,10 @@
 # GU HR Mobile — Product Development Requirements
 
-**Status:** Code Complete R1 + R2 (pending Firebase + Apple signing)  
+**Status:** Code Complete R1 + R2 (pending Firebase + Apple signing + Play Services)  
 **Version:** 1.0.0  
 **Created:** 2026-04-24  
-**Platform:** iOS 14+ (Flutter 3.41.7 / Dart 3.11.5)  
-**Bundle ID:** `app.guop.guHrMobile`
+**Platforms:** iOS 14+ & Android 7+ (API 24+) (Flutter 3.41.7 / Dart 3.11.5)  
+**Bundle IDs:** iOS `app.guop.guHrMobile` / Android `app.guop.guHrMobile`
 
 ---
 
@@ -17,7 +17,7 @@ GU employees + managers currently rely on Telegram Mini App for HR self-service 
 - No manager approval workflow
 - Desktop hr-web admin panel unsuitable for mobile UX
 
-**Solution:** Build native iOS Flutter app targeting employees (R1) + managers (R2), consuming existing HR API (`/api/hr/*`).
+**Solution:** Build cross-platform Flutter app (iOS 14+ / Android 7+) targeting employees (R1) + managers (R2), consuming existing HR API (`/api/hr/*`).
 
 ---
 
@@ -127,8 +127,8 @@ GU employees + managers currently rely on Telegram Mini App for HR self-service 
 
 | Layer | Tech | Why Not Alternatives |
 |-------|------|-----|
-| **Framework** | Flutter 3.41.7 | Cross-platform iOS + Android future; vs. native SwiftUI (12+ month dev) |
-| **Language** | Dart 3.11.5 | Flutter-native; vs. Kotlin (separate codebase) |
+| **Framework** | Flutter 3.41.7 | Cross-platform iOS + Android; vs. native (2+ separate codebases) |
+| **Language** | Dart 3.11.5 | Flutter-native; single codebase compiles to iOS + Android |
 | **State** | Riverpod 2.x + `riverpod_generator` | Compile-safe DI, code-gen; vs. Provider (runtime), Cubit (boilerplate) |
 | **HTTP** | Dio 5.7 + interceptor chain | Flexible interceptor pipeline; vs. http (no chain), dio_http2 (overkill) |
 | **Models** | freezed + json_serializable | Sealed unions for errors/state, immutable defaults; vs. manual serialization |
@@ -137,7 +137,7 @@ GU employees + managers currently rely on Telegram Mini App for HR self-service 
 | **Offline DB** | drift 2.18 | Type-safe SQLite, auto-migrations; vs. hive (untyped) |
 | **Geolocation** | geolocator 12 | Robust accuracy/permission handling; vs. location (stale) |
 | **Camera** | camera 0.11 | Native CameraController; vs. image_picker (gallery-focused) |
-| **Maps (iOS)** | apple_maps_flutter 1.3.0 | Native Apple Maps; iOS-only (no Android equivalent yet) |
+| **Maps** | apple_maps_flutter 1.3.0 (iOS) + text fallback (Android) | iOS: Native Apple Maps. Android: Haversine text card (Phase R3: google_maps_flutter or flutter_map for visual parity) |
 | **Push** | firebase_messaging + APNs | Apple's unified platform; vs. OneSignal (vendor lock) |
 | **Design** | Material 3 (Flutter material package) | Brand alignment; vs. Cupertino (iOS-only, legacy look) |
 | **Font** | Inter via google_fonts | DESIGN.md spec; vs. roboto (wrong brand) |

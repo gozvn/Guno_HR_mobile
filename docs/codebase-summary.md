@@ -1,12 +1,13 @@
 # Codebase Summary — GU HR Mobile
 
-**Last Updated:** 2026-04-24  
+**Last Updated:** 2026-04-28  
 **Language:** Dart 3.11.5  
 **Framework:** Flutter 3.41.7  
-**Total LOC:** ~12,934 hand-authored  
-**Files:** 185+ Dart source files  
+**Total LOC:** ~12,934 hand-authored (Dart) + build config  
+**Files:** 185+ Dart source files + iOS + Android native config  
 **Tests:** 164 unit/widget tests (0 flaky)  
-**iOS Deps Added:** apple_maps_flutter ^1.3.0  
+**Platforms:** iOS 14+ & Android 7+ (API 24+)  
+**Cross-platform Deps:** apple_maps_flutter ^1.3.0 (iOS), geolocator, camera, image_picker, firebase_messaging, flutter_secure_storage, etc.  
 
 ---
 
@@ -273,7 +274,62 @@ lib/
     ├── crashlytics_service.dart         # Firebase.initializeApp() gate + PII redaction
     ├── analytics_service.dart           # logEvent wrapper (kDebugMode gated)
     └── telemetry_service.dart           # Unified instrumentation interface
+
+ios/
+├── Runner.xcodeproj/                    # Xcode project (Bundle ID: app.guop.guHrMobile)
+├── Runner/
+│   ├── Assets.xcassets/
+│   │   ├── AppIcon.appiconset/          # iOS icons (5 densities: @1x, @2x, @3x, etc.)
+│   │   └── LaunchImage.launchimage/
+│   ├── GeneratedPluginRegistrant.swift  # Auto-generated Flutter plugin registry
+│   └── Storyboard files (LaunchScreen)
+├── Pods/                                # CocoaPods dependencies (auto-generated)
+└── Flutter/                             # Flutter build scripts
+
+android/
+├── app/
+│   ├── build.gradle.kts                 # App-level build config (API levels, signing, desugaring)
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── AndroidManifest.xml      # Permissions (LOCATION, CAMERA, MEDIA, BIOMETRIC, INTERNET)
+│   │   │   ├── res/
+│   │   │   │   ├── xml/network_security_config.xml  # Cleartext whitelist (dev hosts only)
+│   │   │   │   ├── mipmap-*/             # Icon densities (ldpi, mdpi, hdpi, xhdpi, xxhdpi)
+│   │   │   │   ├── drawable/             # Launch screen drawable
+│   │   │   │   └── values/styles.xml     # Material theme
+│   │   │   └── kotlin/
+│   │   │       └── MainActivity.kt       # Flutter engine entry point (boilerplate)
+│   │   ├── debug/AndroidManifest.xml     # Debug-only overrides
+│   │   └── profile/AndroidManifest.xml   # Profile build overrides
+│   └── google-services.json              # Firebase config (placeholder until flutterfire configure)
+├── build.gradle.kts                     # Root Gradle config
+├── settings.gradle.kts                  # Gradle project structure
+├── gradle/
+│   └── wrapper/gradle-wrapper.properties # Gradle version (v8.14)
+└── local.properties                     # SDK path (auto-generated, .gitignore)
 ```
+
+---
+
+## Platform-Specific Implementation
+
+### iOS (lib/core/utils/env.dart)
+- **Dev backend:** `http://localhost:3000` (Mac localhost bridged directly to iOS simulator)
+- **Secure storage:** iOS Keychain via `flutter_secure_storage`
+- **Maps:** Apple Maps native widget via `apple_maps_flutter`
+
+### Android (lib/core/utils/env.dart + android/)
+- **Dev backend:** 
+  - Genymotion emulator: `http://10.0.3.2:3000` (alias for Mac localhost)
+  - Android Studio AVD: `http://10.0.2.2:3000` (alias for host)
+- **Secure storage:** Android Keystore via `flutter_secure_storage` (wraps EncryptedSharedPreferences)
+- **Maps:** Haversine text fallback (Phase R3: google_maps_flutter or flutter_map for visual parity)
+- **Permissions:** Requested at runtime via `geolocator`, `camera`, `image_picker` plugins
+
+**Configuration files:**
+- `android/app/build.gradle.kts`: compileSdk 36, minSdk 24, targetSdk 34, multiDexEnabled, desugaring
+- `android/app/src/main/AndroidManifest.xml`: Runtime permission declarations
+- `android/app/src/main/res/xml/network_security_config.xml`: Cleartext HTTP for dev only
 
 ---
 

@@ -1,8 +1,35 @@
 # System Architecture — GU HR Mobile
 
-**Last Updated:** 2026-04-24  
+**Last Updated:** 2026-04-28  
 **Version:** 1.0.0 (R1 + R2 complete)  
-**Platform:** iOS 14+ (Flutter/Dart)
+**Platforms:** iOS 14+ & Android 7+ (API 24+) (Flutter/Dart)
+
+---
+
+## Platform Support Matrix
+
+| Feature | iOS | Android | Status |
+|---------|-----|---------|--------|
+| Authentication | ✓ Keychain | ✓ Keychain (via flutter_secure_storage) | R1 Complete |
+| Check-in (GPS + selfie) | ✓ Apple Maps + native camera | ✓ Haversine text card + native camera | R1 Complete |
+| Push Notifications | ✓ APNs (infrastructure ready) | ✓ FCM (infrastructure ready) | R2 Complete (gated) |
+| Network (dev) | `http://localhost:3000` | `http://10.0.3.2:3000` (Genymotion) or `http://10.0.2.2:3000` (AVD) | Env-aware |
+| Network (prod) | `https://api.guop.app` | `https://api.guop.app` | Shared |
+| Offline Queue | ✓ Drift SQLite | ✓ Drift SQLite | R1 Complete |
+| Deep-linking | ✓ Custom schemes + Branch | ✓ Custom schemes (Android Intent filters) | R2 Complete |
+| Maps visual | ✓ Apple Maps native | ⚠ Text fallback (Haversine distance display) | R1 MVP; R3 planned (google_maps_flutter or flutter_map) |
+
+**Android Configuration:**
+- `minSdk 24` (Android 7), `targetSdk 34` (Android 14)
+- `compileSdk 36` (API 35+ required by camera, core 1.18+)
+- Core library desugaring enabled (`desugar_jdk_libs 2.1.4`) for Java 8+ time API support
+- `multiDexEnabled = true`
+- Network security: cleartext HTTP allowed for dev hosts only (`10.0.3.2`, `10.0.2.2`, localhost)
+
+**iOS Configuration:**
+- `minTarget iOS 14.0`
+- Keychain capabilities enabled
+- APNs + remote notification background modes
 
 ---
 
