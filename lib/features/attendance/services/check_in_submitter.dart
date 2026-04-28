@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/api/api_error.dart';
 import '../../../core/errors/app_failure.dart';
 import '../../../instrumentation/analytics_service.dart';
 import '../data/attendance_api.dart';
@@ -149,18 +150,28 @@ class CheckInSubmitter {
   }
 
   bool _isAlreadyCheckedIn(DioException e) {
+    if (e.error is ApiError) {
+      final code = (e.error as ApiError).code;
+      if (code == 'ATT_ALREADY_CHECKED_IN' || code == 'ATT_ALREADY_CHECKED_OUT') return true;
+    }
     final body = _extractError(e);
     return body.contains('Đã check-in lúc') || body.contains('Đã check-out');
   }
 
   bool _isOutsideRadius(DioException e) {
+    if (e.error is ApiError && (e.error as ApiError).code == 'ATT_GPS_OUT_OF_RANGE') return true;
     return _extractError(e).contains('Chấm công ngoài văn phòng');
   }
 
   String _extractError(DioException e) {
+    if (e.error is ApiError) return (e.error as ApiError).message;
     try {
       final data = e.response?.data;
-      if (data is Map) return data['error']?.toString() ?? '';
+      if (data is Map) {
+        final raw = data['error'];
+        if (raw is String) return raw;
+        if (raw is Map) return raw['message']?.toString() ?? '';
+      }
     } catch (_) {}
     return '';
   }

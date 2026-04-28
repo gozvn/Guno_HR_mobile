@@ -7,6 +7,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 
+import '../../../core/api/api_error.dart';
 import '../data/attendance_api.dart';
 import '../data/dto/checkin_request_dto.dart';
 import '../data/local/attendance_database.dart';
@@ -163,14 +164,23 @@ class OfflineRetryWorker with WidgetsBindingObserver {
       Duration(seconds: math.min(3600, math.pow(5, n).toInt()));
 
   bool _isAlreadyCheckedIn(DioException e) {
+    if (e.error is ApiError) {
+      final code = (e.error as ApiError).code;
+      if (code == 'ATT_ALREADY_CHECKED_IN' || code == 'ATT_ALREADY_CHECKED_OUT') return true;
+    }
     final body = _extractError(e);
     return body.contains('Đã check-in lúc') || body.contains('Đã check-out');
   }
 
   String _extractError(DioException e) {
+    if (e.error is ApiError) return (e.error as ApiError).message;
     try {
       final data = e.response?.data;
-      if (data is Map) return data['error']?.toString() ?? '';
+      if (data is Map) {
+        final raw = data['error'];
+        if (raw is String) return raw;
+        if (raw is Map) return raw['message']?.toString() ?? '';
+      }
     } catch (_) {}
     return e.message ?? 'Unknown error';
   }

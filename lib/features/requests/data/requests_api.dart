@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:path/path.dart' as p;
 
+import '../../../core/api/pagination_meta.dart';
 import 'dto/create_request_payload.dart';
 import 'dto/ht_request_dto.dart';
 import 'dto/request_detail_dto.dart';
@@ -16,6 +17,7 @@ class RequestsApi {
   final Dio _dio;
 
   /// GET /api/hr/requests — server auto-filters by JWT.
+  /// After envelope unwrap: response.data = List<...>; pagination in response.extra['pagination'].
   Future<({List<RequestDto> items, int total})> list({
     String? status,
     String? type,
@@ -23,7 +25,7 @@ class RequestsApi {
     int limit = 20,
     int offset = 0,
   }) async {
-    final resp = await _dio.get<Map<String, dynamic>>(
+    final resp = await _dio.get<List<dynamic>>(
       '/api/hr/requests',
       queryParameters: {
         if (status != null) 'status': status,
@@ -33,11 +35,11 @@ class RequestsApi {
         'offset': offset,
       },
     );
-    final data = resp.data!;
-    final items = (data['items'] as List<dynamic>)
+    final items = (resp.data ?? [])
         .map((e) => RequestDto.fromJson(e as Map<String, dynamic>))
         .toList();
-    return (items: items, total: (data['total'] as num).toInt());
+    final pagination = resp.extra['pagination'] as PaginationMeta?;
+    return (items: items, total: pagination?.total ?? items.length);
   }
 
   /// GET /api/hr/requests/:id

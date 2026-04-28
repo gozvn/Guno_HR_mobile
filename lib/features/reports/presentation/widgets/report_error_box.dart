@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../core/api/api_error.dart';
+
 /// Centred error placeholder for report pages.
 /// Extracts the server's `error` field from a DioException response so users
 /// see "Database error" instead of the verbose `DioException [bad response]`
@@ -54,10 +56,16 @@ class ReportErrorBox extends StatelessWidget {
 
   String _extractMessage(Object error) {
     if (error is DioException) {
+      // Envelope path: ApiResponseInterceptor attaches structured ApiError.
+      if (error.error is ApiError) {
+        return (error.error as ApiError).message;
+      }
+      // Legacy fallback for non-envelope responses.
       final data = error.response?.data;
       if (data is Map) {
         final m = data['error'];
         if (m is String && m.isNotEmpty) return m;
+        if (m is Map && m['message'] is String) return m['message'] as String;
       }
       final status = error.response?.statusCode;
       if (status != null) return 'Máy chủ trả mã $status';

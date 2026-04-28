@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 
 import '../errors/app_failure.dart';
 import '../../features/auth/data/auth_repository.dart';
+import 'api_error.dart';
 
 // Maps DioException / HTTP status codes to typed AppFailure so callers
 // never need to inspect raw DioException.
@@ -25,16 +26,38 @@ class ErrorMapperInterceptor extends Interceptor {
   }
 
   AppFailure _map(DioException err) {
-    final status = err.response?.statusCode;
-    final body = err.response?.data;
-    final message = body is Map ? (body['error'] as String?) : null;
-
+    // Network failures take precedence over response parsing.
     if (err.type == DioExceptionType.connectionTimeout ||
         err.type == DioExceptionType.receiveTimeout ||
         err.type == DioExceptionType.sendTimeout ||
         err.type == DioExceptionType.connectionError) {
       return const AppFailure.network('Không có kết nối mạng');
     }
+
+    // Envelope path: ApiResponseInterceptor attaches structured ApiError.
+    final apiError = err.error;
+    final status = err.response?.statusCode;
+    if (apiError is ApiError) {
+      switch (status) {
+        case 400:
+          return AppFailure.validation(apiError.message);
+        case 401:
+          return AppFailure.unauthorized(apiError.message);
+        case 403:
+          final requiredRoles = apiError.details?['required_roles'];
+          return AppFailure.forbidden(
+            requiredRoles is List ? requiredRoles.join(', ') : apiError.message,
+          );
+        default:
+          return AppFailure.server(status ?? 0, apiError.message);
+      }
+    }
+
+    // Legacy fallback for non-envelope error bodies (webhooks, health, etc.).
+    final body = err.response?.data;
+    final message = body is Map
+        ? (body['error'] is String ? body['error'] as String? : body['error']?['message'] as String?)
+        : null;
 
     switch (status) {
       case 400:

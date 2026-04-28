@@ -23,7 +23,7 @@ final secureStorageProvider = AutoDisposeProvider<SecureStorage>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef SecureStorageRef = AutoDisposeProviderRef<SecureStorage>;
-String _$dioHash() => r'06bd4d3d0f247840da64d26e5ef71612e68cb9ac';
+String _$dioHash() => r'5243149a705180878fa35e74d2209c6a323ef4b7';
 
 /// See also [dio].
 @ProviderFor(dio)

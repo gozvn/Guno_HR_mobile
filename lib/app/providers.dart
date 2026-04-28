@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../core/api/api_response_interceptor.dart';
 import '../core/api/auth_interceptor.dart';
 import '../core/api/cache_interceptor.dart';
 import '../core/api/dio_client.dart';
@@ -27,12 +28,13 @@ SecureStorage secureStorage(Ref ref) {
   );
 }
 
-// Interceptor order: auth → refresh → cache → error-mapper.
+// Interceptor order: api-response (envelope unwrap) → auth → refresh → cache → error-mapper.
 @riverpod
 Dio dio(Ref ref) {
   return buildDio(
     baseUrl: apiBase,
     interceptors: [
+      ApiResponseInterceptor(),
       AuthInterceptor(ref),
       RefreshInterceptor(ref),
       CacheInterceptor(),
